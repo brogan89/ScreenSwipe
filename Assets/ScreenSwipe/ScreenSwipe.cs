@@ -114,6 +114,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     [Tooltip("Only change screens with buttons")]
     public bool buttonsOnly;
 
+    [SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
+    private bool disableButtonsAtEnds;
+
     [Header("Tween")]
     [SerializeField, Tooltip("Length of the tween (s)")]
     private float tweenTime = 0.5f;
@@ -240,6 +243,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
                 // size
                 screens[i].sizeDelta = screenSize;
 
+                // scale
+                screens[i].localScale = Vector3.one;
+
                 // position
                 screens[i].anchoredPosition = swipeType == SwipeType.Horizonal
                             ? new Vector2((screenSize.x * i) + (spacing * i), 0)
@@ -257,6 +263,15 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
                             ? new Vector2((screenSize.x + spacing) * screens.Count - spacing, screenSize.y)
                             : new Vector2(screenSize.x, (screenSize.y + spacing) * screens.Count - spacing);
         }
+    }
+
+    /// <summary>
+    /// Calls private corouitine RefreshContentsCoroutine()
+    /// <para>Waits until end of frame and then resets screens and pagination</para>
+    /// </summary>
+    public void RefreshContents()
+    {
+        StartCoroutine(RefreshContentsCoroutine());
     }
 
     /// <summary>
@@ -284,8 +299,16 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         else
             newScreen.SetAsLastSibling();
 
+        // add to list
+        screens.Add(newScreen);
+
+        // pagination
         if (pagination)
-            Instantiate(toggles[0], pagination.transform);
+        {
+            var newToggle = Instantiate(toggles[0], pagination.transform);
+            newToggle.group = pagination;
+            newToggle.isOn = false;
+        }
 
         //refresh
         StartCoroutine(RefreshContentsCoroutine());
@@ -295,20 +318,56 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// Removes screen from list and recalculates contents width 
     /// </summary>
     /// <param name="screenNumber"></param>
-    public void RemoveScreen(int screenNumber)
+    public void RemoveScreen(int screenNumber, Action callback = null)
     {
         if (IsWithinScreenCount(screenNumber))
         {
+            // remove from list
+            screens.RemoveAt(screenNumber);
+
+            // destroy gameobject
             Destroy(content.GetChild(screenNumber).gameObject);
 
+            // pagination
             if (pagination)
+            {
+                // remove from list
+                toggles.RemoveAt(screenNumber);
+
+                // destroy gameobject
                 Destroy(toggles[screenNumber].gameObject);
+            }
 
             // refresh
             StartCoroutine(RefreshContentsCoroutine());
         }
         else
             Debug.LogWarningFormat("ScreenNumber: '{0}' doesnt exist", screenNumber);
+    }
+
+    public void RemoveAllScreens()
+    {
+        for (int i = 0; i < content.childCount; i++)
+        {
+            // remove from list
+            screens.RemoveAt(i);
+
+            // destroy gameobject
+            Destroy(content.GetChild(i).gameObject);
+
+            // pagination
+            if (pagination)
+            {
+                // remove from list
+                toggles.RemoveAt(i);
+
+                // destroy gameobject
+                Destroy(toggles[i].gameObject);
+            }
+        }
+
+        // refresh
+        StartCoroutine(RefreshContentsCoroutine());
     }
 
     /// <summary>
@@ -328,6 +387,26 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
             // tween screen
             TweenPage(-screens[_currentScreen].anchoredPosition);
+
+            // disable buttons if ends are reached
+            if (disableButtonsAtEnds && previousButton != null && nextButton != null)
+            {
+                if (_currentScreen == 0)
+                {
+                    previousButton.gameObject.SetActive(false);
+                    nextButton.gameObject.SetActive(true);
+                }
+                else if (_currentScreen == ScreenCount - 1)
+                {
+                    nextButton.gameObject.SetActive(false);
+                    previousButton.gameObject.SetActive(true);
+                }
+                else
+                {
+                    previousButton.gameObject.SetActive(true);
+                    nextButton.gameObject.SetActive(true);
+                }
+            }
         }
         else
             Debug.LogErrorFormat("Invalid screen number '{0}'. Must be between 0 and {1}", screenNumber, screens.Count - 1);
@@ -335,12 +414,14 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void GoToNextScreen()
     {
-        GoToScreen(CurrentScreen + 1);
+        if (IsWithinScreenCount(CurrentScreen + 1))
+            GoToScreen(CurrentScreen + 1);
     }
 
     public void GoToPreviousScreen()
     {
-        GoToScreen(CurrentScreen - 1);
+        if (IsWithinScreenCount(CurrentScreen - 1))
+            GoToScreen(CurrentScreen - 1);
     }
 
     private bool IsWithinScreenCount(int index)
@@ -679,6 +760,7 @@ public class ScreenSwipeEditor : Editor
     SerializedProperty _nextButton;
     SerializedProperty _previousButton;
     SerializedProperty _buttonsOnly;
+    SerializedProperty _disableButtonsAtEnds;
 
     // tween
     SerializedProperty _tweenTime;
@@ -711,6 +793,7 @@ public class ScreenSwipeEditor : Editor
         _nextButton = serializedObject.FindProperty("nextButton");
         _previousButton = serializedObject.FindProperty("previousButton");
         _buttonsOnly = serializedObject.FindProperty("buttonsOnly");
+        _disableButtonsAtEnds = serializedObject.FindProperty("disableButtonsAtEnds");
 
 
         // tween
@@ -754,7 +837,10 @@ public class ScreenSwipeEditor : Editor
         EditorGUILayout.PropertyField(_nextButton);
         EditorGUILayout.PropertyField(_previousButton);
         if (_target.NextButton != null || _target.PreviousButton != null)
+        {
             EditorGUILayout.PropertyField(_buttonsOnly);
+            EditorGUILayout.PropertyField(_disableButtonsAtEnds);
+        }
 
         // tween
         EditorGUILayout.PropertyField(_tweenTime);
