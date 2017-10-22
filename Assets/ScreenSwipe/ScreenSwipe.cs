@@ -75,9 +75,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     [SerializeField, Tooltip("Starting screen. Note: a 0 indexed array")]
     private int startingScreen;
 
-    //[SerializeField]
-    private int _currentScreen;
-    public int CurrentScreen { get { return _currentScreen; } }
+    [SerializeField]
+    private int currentScreen;
+    public int CurrentScreen { get { return currentScreen; } }
 
     [SerializeField, Tooltip("Parent object which contain the screens")]
     private RectTransform content;
@@ -95,12 +95,13 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         }
     }
 
-    //[SerializeField]
+    [SerializeField]
     private List<RectTransform> screens;
     public int ScreenCount { get { return screens.Count; } }
 
     [SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
     private ToggleGroup pagination;
+    private Toggle _toggleMockPrfab;
     private List<Toggle> toggles;
 
     [Header("Controlls (Optional)")]
@@ -188,11 +189,78 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         {
             toggles = pagination.GetComponentsInChildren<Toggle>().ToList();
 
+            // store the first toggle to use for instantiating later
+            if (toggles[0] != null && _toggleMockPrfab == null)
+                _toggleMockPrfab = toggles[0];
+
+            // loop through and assign toggle properties
             for (int i = 0; i < toggles.Count; i++)
             {
                 toggles[i].isOn = false;
                 toggles[i].group = pagination;
                 toggles[i].onValueChanged.AddListener(PaginationToggleCallback);
+            }
+        }
+    }
+
+    private void SelectToggle(int index)
+    {
+        if (pagination)
+        {
+            try
+            {
+                toggles[currentScreen].isOn = true;
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Debug.LogError(e);
+                Debug.LogError(index);
+            }
+        }
+    }
+
+    private void AddPaginationToggle()
+    {
+        if (pagination)
+        {
+            var newToggle = Instantiate(_toggleMockPrfab, pagination.transform);
+            newToggle.group = pagination;
+            newToggle.isOn = false;
+
+            // for some reason shit gets turned off so this is a just in case thing
+            newToggle.gameObject.SetActive(true);
+            newToggle.enabled = true;
+            newToggle.GetComponentInChildren<Image>().enabled = true;
+
+
+            toggles.Add(newToggle);
+        }
+    }
+
+    private void RemovePaginationToggle(int index)
+    {
+        // pagination
+        if (pagination)
+        {
+            // remove from list
+            toggles.RemoveAt(index);
+
+            // destroy gameobject
+            Destroy(toggles[index].gameObject);
+        }
+    }
+
+    private void RemoveAllPaginationToggles()
+    {
+        if (pagination)
+        {
+            // clear toggle list
+            toggles.Clear();
+
+            for (int i = 0; i < pagination.transform.childCount; i++)
+            {
+                // destroy gameobject
+                Destroy(pagination.transform.GetChild(i).gameObject);
             }
         }
     }
@@ -303,12 +371,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         screens.Add(newScreen);
 
         // pagination
-        if (pagination)
-        {
-            var newToggle = Instantiate(toggles[0], pagination.transform);
-            newToggle.group = pagination;
-            newToggle.isOn = false;
-        }
+        AddPaginationToggle();
 
         //refresh
         StartCoroutine(RefreshContentsCoroutine());
@@ -329,14 +392,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             Destroy(content.GetChild(screenNumber).gameObject);
 
             // pagination
-            if (pagination)
-            {
-                // remove from list
-                toggles.RemoveAt(screenNumber);
-
-                // destroy gameobject
-                Destroy(toggles[screenNumber].gameObject);
-            }
+            RemovePaginationToggle(screenNumber);
 
             // refresh
             StartCoroutine(RefreshContentsCoroutine());
@@ -347,27 +403,18 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void RemoveAllScreens()
     {
+        Debug.Log("Removing Screens : " + content.childCount);
+
+        // clear list
+        screens.Clear();
+
         for (int i = 0; i < content.childCount; i++)
         {
-            // remove from list
-            screens.RemoveAt(i);
-
-            // destroy gameobject
+            // destroy screen game object
             Destroy(content.GetChild(i).gameObject);
-
-            // pagination
-            if (pagination)
-            {
-                // remove from list
-                toggles.RemoveAt(i);
-
-                // destroy gameobject
-                Destroy(toggles[i].gameObject);
-            }
         }
 
-        // refresh
-        StartCoroutine(RefreshContentsCoroutine());
+        RemoveAllPaginationToggles();
     }
 
     /// <summary>
@@ -379,24 +426,23 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         if (IsWithinScreenCount(screenNumber))
         {
             // set current screen
-            _currentScreen = screenNumber;
+            currentScreen = screenNumber;
 
             // pagination
-            if (toggles != null)
-                toggles[_currentScreen].isOn = true;
+            SelectToggle(screenNumber);
 
             // tween screen
-            TweenPage(-screens[_currentScreen].anchoredPosition);
+            TweenPage(-screens[currentScreen].anchoredPosition);
 
             // disable buttons if ends are reached
             if (disableButtonsAtEnds && previousButton != null && nextButton != null)
             {
-                if (_currentScreen == 0)
+                if (currentScreen == 0)
                 {
                     previousButton.gameObject.SetActive(false);
                     nextButton.gameObject.SetActive(true);
                 }
-                else if (_currentScreen == ScreenCount - 1)
+                else if (currentScreen == ScreenCount - 1)
                 {
                     nextButton.gameObject.SetActive(false);
                     previousButton.gameObject.SetActive(true);
@@ -471,7 +517,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         ScreenChangeValidate();
 
         // got to screen
-        GoToScreen(_currentScreen);
+        GoToScreen(currentScreen);
     }
 
     /// <summary>
@@ -530,7 +576,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
                 var screenJump = skip ? 2 : 1;
 
                 // assign new page number
-                newPageNo = leftSwipe ? _currentScreen + screenJump : _currentScreen - screenJump;
+                newPageNo = leftSwipe ? currentScreen + screenJump : currentScreen - screenJump;
             }
             else
             {
@@ -544,18 +590,18 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
                 var screenJump = skip ? 2 : 1;
 
                 // assign new page number
-                newPageNo = upSwipe ? _currentScreen + screenJump : _currentScreen - screenJump;
+                newPageNo = upSwipe ? currentScreen + screenJump : currentScreen - screenJump;
             }
 
             // if valid pageNo then update current page and invoke event
             if (IsWithinScreenCount(newPageNo))
             {
                 // change current page
-                _currentScreen = newPageNo;
+                currentScreen = newPageNo;
 
                 // invoke changed event
                 if (onScreenChanged != null)
-                    onScreenChanged.Invoke(_currentScreen);
+                    onScreenChanged.Invoke(currentScreen);
             }
         }
     }
@@ -586,10 +632,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             "time", tweenTime,
             "onupdate", (Action<Vector2>)(x => SetContentAnchoredPosition(x)),
             "oncomplete", (Action<Vector2>)(_ =>
-                {
-                    if (onScreenTweenEnd != null)
-                        onScreenTweenEnd.Invoke(_currentScreen);
-                })
+            {
+                if (onScreenTweenEnd != null)
+                    onScreenTweenEnd.Invoke(currentScreen);
+            })
             ));
     }
     #endregion
@@ -755,6 +801,8 @@ public class ScreenSwipeEditor : Editor
     SerializedProperty _content;
     SerializedProperty _spacing;
     SerializedProperty _pagination;
+    SerializedProperty _currentScreen;
+    SerializedProperty _screens;
 
     // controlls
     SerializedProperty _nextButton;
@@ -788,6 +836,8 @@ public class ScreenSwipeEditor : Editor
         _content = serializedObject.FindProperty("content");
         _spacing = serializedObject.FindProperty("spacing");
         _pagination = serializedObject.FindProperty("pagination");
+        _currentScreen = serializedObject.FindProperty("currentScreen");
+        _screens = serializedObject.FindProperty("screens");
 
         // controlls
         _nextButton = serializedObject.FindProperty("nextButton");
@@ -832,6 +882,8 @@ public class ScreenSwipeEditor : Editor
         EditorGUILayout.PropertyField(_content);
         EditorGUILayout.PropertyField(_spacing);
         EditorGUILayout.PropertyField(_pagination);
+        EditorGUILayout.PropertyField(_currentScreen);
+        EditorGUILayout.PropertyField(_screens, true);
 
         // controlls
         EditorGUILayout.PropertyField(_nextButton);
