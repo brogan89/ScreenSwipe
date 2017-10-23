@@ -2,11 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [AddComponentMenu("UI/ScreenSwipe")]
 [RequireComponent(typeof(RectTransform), typeof(Mask), typeof(Image))]
@@ -632,10 +636,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             "time", tweenTime,
             "onupdate", (Action<Vector2>)(x => SetContentAnchoredPosition(x)),
             "oncomplete", (Action<Vector2>)(_ =>
-            {
-                if (onScreenTweenEnd != null)
-                    onScreenTweenEnd.Invoke(currentScreen);
-            })
+                {
+                    if (onScreenTweenEnd != null)
+                        onScreenTweenEnd.Invoke(currentScreen);
+                })
             ));
     }
     #endregion
@@ -781,6 +785,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     }
     #endregion
 }
+
+#if UNITY_EDITOR
 
 #region Custom Editor
 [CustomEditor(typeof(ScreenSwipe))]
@@ -1008,3 +1014,5 @@ public class ScreenSwipeCustomMenu : MonoBehaviour
     }
 }
 #endregion
+
+#endif
