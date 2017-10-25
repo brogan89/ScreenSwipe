@@ -118,6 +118,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     private List<Toggle> toggles;
 
     [Header("Controlls (Optional)")]
+    [Tooltip("True = Acts like a normal screenRect but with snapping\nFalse = Can only change screens with buttons or from another script")]
+    public bool isInteractable = true;
+
     [SerializeField]
     private Button nextButton;
     public Button NextButton { get { return nextButton; } }
@@ -125,8 +128,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     private Button previousButton;
     public Button PreviousButton { get { return previousButton; } }
 
-    [Tooltip("Only change screens with buttons")]
-    public bool buttonsOnly;
+
 
     [SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
     private bool disableButtonsAtEnds;
@@ -169,7 +171,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
         // can only use buttons only if there buttons to press
         if (nextButton == null && previousButton == null)
-            buttonsOnly = false;
+            isInteractable = false;
     }
 
     private IEnumerator CheckForOrientationChange()
@@ -519,7 +521,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     #region Swipe and Drag Controlls
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || buttonsOnly)
+        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
             return;
 
         if (onScreenDragBegin != null)
@@ -538,7 +540,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || buttonsOnly)
+        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
             return;
 
         /// Wrapper fucntion <see cref="ScrollRect.OnDrag(PointerEventData)"/>
@@ -550,7 +552,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || buttonsOnly)
+        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
             return;
 
         // validate screen change and sets current screen 
@@ -851,9 +853,9 @@ public class ScreenSwipeEditor : Editor
     SerializedProperty _editorRefreshKey;
 
     // controlls
+    SerializedProperty _isInteractable;
     SerializedProperty _nextButton;
     SerializedProperty _previousButton;
-    SerializedProperty _buttonsOnly;
     SerializedProperty _disableButtonsAtEnds;
 
     // tween
@@ -890,9 +892,9 @@ public class ScreenSwipeEditor : Editor
         _editorRefreshKey = serializedObject.FindProperty("editorRefreshKey");
 
         // controlls
+        _isInteractable = serializedObject.FindProperty("isInteractable");
         _nextButton = serializedObject.FindProperty("nextButton");
         _previousButton = serializedObject.FindProperty("previousButton");
-        _buttonsOnly = serializedObject.FindProperty("buttonsOnly");
         _disableButtonsAtEnds = serializedObject.FindProperty("disableButtonsAtEnds");
 
         // tween
@@ -939,15 +941,12 @@ public class ScreenSwipeEditor : Editor
         if (_target.pollForScreenOrientationChange)
             EditorGUILayout.PropertyField(_editorRefreshKey);
 
-
         // controlls
+        EditorGUILayout.PropertyField(_isInteractable);
         EditorGUILayout.PropertyField(_nextButton);
         EditorGUILayout.PropertyField(_previousButton);
         if (_target.NextButton != null || _target.PreviousButton != null)
-        {
-            EditorGUILayout.PropertyField(_buttonsOnly);
             EditorGUILayout.PropertyField(_disableButtonsAtEnds);
-        }
 
         // tween
         EditorGUILayout.PropertyField(_tweenTime);
