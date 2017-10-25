@@ -145,11 +145,17 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     public ScreenEvent onScreenChanged;
     public ScreenEvent onScreenTweenEnd;
 
+    // screen orientation events
+    private ScreenOrientation screenOrientation;
+
     private void Start()
     {
         SetScreenPositionsAndContentWidth();
         Pagination_Init();
         GoToScreen(startingScreen);
+
+        // set original screen orientation
+        screenOrientation = Screen.orientation;
 
         // button listeners
         if (previousButton)
@@ -181,6 +187,15 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         skipScreenVelocityThreshold = 250;
         easeType = iTween.EaseType.easeOutExpo;
         spacing = 20;
+    }
+
+    private void LateUpdate()
+    {
+        if (screenOrientation != Screen.orientation)
+        {
+            screenOrientation = Screen.orientation;
+            RefreshContents();
+        }
     }
 
     #region Pagination
