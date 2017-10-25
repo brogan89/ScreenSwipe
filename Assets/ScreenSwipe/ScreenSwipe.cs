@@ -103,6 +103,15 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     private List<RectTransform> screens;
     public int ScreenCount { get { return screens.Count; } }
 
+
+    // screen orienation change events
+    [Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
+    public bool pollForScreenOrientationChange;
+    [SerializeField, Tooltip("A key for testing orientation change event in the editor")]
+    private KeyCode editorRefreshKey = KeyCode.F1;
+    private ScreenOrientation screenOrientation;
+
+
     [SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
     private ToggleGroup pagination;
     private Toggle _toggleMockPrfab;
@@ -145,17 +154,11 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     public ScreenEvent onScreenChanged;
     public ScreenEvent onScreenTweenEnd;
 
-    // screen orientation events
-    private ScreenOrientation screenOrientation;
-
     private void Start()
     {
         SetScreenPositionsAndContentWidth();
         Pagination_Init();
         GoToScreen(startingScreen);
-
-        // set original screen orientation
-        screenOrientation = Screen.orientation;
 
         // button listeners
         if (previousButton)
@@ -167,6 +170,33 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         // can only use buttons only if there buttons to press
         if (nextButton == null && previousButton == null)
             buttonsOnly = false;
+    }
+
+    private IEnumerator CheckForOrientationChange()
+    {
+        // set initial orientation
+        screenOrientation = Screen.orientation;
+
+        while (enabled)
+        {
+            if (screenOrientation != Screen.orientation || (Application.isEditor && Input.GetKeyDown(editorRefreshKey)))
+            {
+                screenOrientation = Screen.orientation;
+
+                Debug.LogFormat("SwcreenSwipe Orientation change: {0}", screenOrientation);
+
+                // refresh contents on the change
+                RefreshContents();
+            }
+            yield return null;
+        }
+    }
+
+    private void OnEnable()
+    {
+        // refresh contents on screen change
+        if (pollForScreenOrientationChange)
+            StartCoroutine(CheckForOrientationChange());
     }
 
     private void OnValidate()
@@ -187,15 +217,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         skipScreenVelocityThreshold = 250;
         easeType = iTween.EaseType.easeOutExpo;
         spacing = 20;
-    }
-
-    private void LateUpdate()
-    {
-        if (screenOrientation != Screen.orientation)
-        {
-            screenOrientation = Screen.orientation;
-            RefreshContents();
-        }
     }
 
     #region Pagination
@@ -651,10 +672,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             "time", tweenTime,
             "onupdate", (Action<Vector2>)(x => SetContentAnchoredPosition(x)),
             "oncomplete", (Action<Vector2>)(_ =>
-                {
-                    if (onScreenTweenEnd != null)
-                        onScreenTweenEnd.Invoke(currentScreen);
-                })
+            {
+                if (onScreenTweenEnd != null)
+                    onScreenTweenEnd.Invoke(currentScreen);
+            })
             ));
     }
     #endregion
@@ -825,6 +846,10 @@ public class ScreenSwipeEditor : Editor
     SerializedProperty _currentScreen;
     SerializedProperty _screens;
 
+    // screen change events
+    SerializedProperty _pollForScreenOrientationChange;
+    SerializedProperty _editorRefreshKey;
+
     // controlls
     SerializedProperty _nextButton;
     SerializedProperty _previousButton;
@@ -860,12 +885,15 @@ public class ScreenSwipeEditor : Editor
         _currentScreen = serializedObject.FindProperty("currentScreen");
         _screens = serializedObject.FindProperty("screens");
 
+        // screen change
+        _pollForScreenOrientationChange = serializedObject.FindProperty("pollForScreenOrientationChange");
+        _editorRefreshKey = serializedObject.FindProperty("editorRefreshKey");
+
         // controlls
         _nextButton = serializedObject.FindProperty("nextButton");
         _previousButton = serializedObject.FindProperty("previousButton");
         _buttonsOnly = serializedObject.FindProperty("buttonsOnly");
         _disableButtonsAtEnds = serializedObject.FindProperty("disableButtonsAtEnds");
-
 
         // tween
         _tweenTime = serializedObject.FindProperty("tweenTime");
@@ -906,6 +934,12 @@ public class ScreenSwipeEditor : Editor
         EditorGUILayout.PropertyField(_currentScreen);
         EditorGUILayout.PropertyField(_screens, true);
 
+        //screen
+        EditorGUILayout.PropertyField(_pollForScreenOrientationChange);
+        if (_target.pollForScreenOrientationChange)
+            EditorGUILayout.PropertyField(_editorRefreshKey);
+
+
         // controlls
         EditorGUILayout.PropertyField(_nextButton);
         EditorGUILayout.PropertyField(_previousButton);
@@ -924,7 +958,6 @@ public class ScreenSwipeEditor : Editor
         EditorGUILayout.PropertyField(_onScreenChanged);
         EditorGUILayout.PropertyField(_onScreenTweenEnd);
 
-
         serializedObject.ApplyModifiedProperties();
     }
 }
@@ -937,6 +970,7 @@ public class ScreenSwipeCustomMenu : MonoBehaviour
     {
         // Ensure it gets reparented if this was a context click (otherwise does nothing)
         GameObjectUtility.SetParentAndAlign(go, (GameObject)menuCommand.context);
+
         // Register the creation in the undo system
         Undo.RegisterCreatedObjectUndo(go, "Create " + go.name);
         Selection.activeObject = go;
