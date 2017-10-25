@@ -155,7 +155,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     public UnityEvent onScreenDragBegin;
     public ScreenEvent onScreenChanged;
     public ScreenEvent onScreenTweenEnd;
-
+        
     private void Start()
     {
         SetScreenPositionsAndContentWidth();
@@ -846,6 +846,7 @@ public class ScreenSwipeEditor : Editor
     SerializedProperty _spacing;
     SerializedProperty _pagination;
     SerializedProperty _currentScreen;
+    SerializedProperty _startingScreen;
     SerializedProperty _screens;
 
     // screen change events
@@ -885,6 +886,7 @@ public class ScreenSwipeEditor : Editor
         _spacing = serializedObject.FindProperty("spacing");
         _pagination = serializedObject.FindProperty("pagination");
         _currentScreen = serializedObject.FindProperty("currentScreen");
+        _startingScreen = serializedObject.FindProperty("startingScreen");
         _screens = serializedObject.FindProperty("screens");
 
         // screen change
@@ -915,10 +917,8 @@ public class ScreenSwipeEditor : Editor
 
         // editing
         EditorGUILayout.PropertyField(_editingScreen);
-        if (GUILayout.Button("GoToScreen"))
-        {
-            _target.EditingScreen();
-        }
+        if (GUILayout.Button("GoToScreen"))        
+            _target.EditingScreen();        
 
         //swipe
         EditorGUILayout.PropertyField(_swipeType);
@@ -934,6 +934,7 @@ public class ScreenSwipeEditor : Editor
         EditorGUILayout.PropertyField(_spacing);
         EditorGUILayout.PropertyField(_pagination);
         EditorGUILayout.PropertyField(_currentScreen);
+        EditorGUILayout.PropertyField(_startingScreen);
         EditorGUILayout.PropertyField(_screens, true);
 
         //screen
