@@ -155,7 +155,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     public UnityEvent onScreenDragBegin;
     public ScreenEvent onScreenChanged;
     public ScreenEvent onScreenTweenEnd;
-        
+
     private void Start()
     {
         SetScreenPositionsAndContentWidth();
@@ -521,7 +521,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     #region Swipe and Drag Controlls
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
             return;
 
         if (onScreenDragBegin != null)
@@ -540,7 +540,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
             return;
 
         /// Wrapper fucntion <see cref="ScrollRect.OnDrag(PointerEventData)"/>
@@ -552,7 +552,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left || isInteractable)
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
             return;
 
         // validate screen change and sets current screen 
@@ -917,8 +917,8 @@ public class ScreenSwipeEditor : Editor
 
         // editing
         EditorGUILayout.PropertyField(_editingScreen);
-        if (GUILayout.Button("GoToScreen"))        
-            _target.EditingScreen();        
+        if (GUILayout.Button("GoToScreen"))
+            _target.EditingScreen();
 
         //swipe
         EditorGUILayout.PropertyField(_swipeType);
