@@ -128,8 +128,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     private Button previousButton;
     public Button PreviousButton { get { return previousButton; } }
 
-
-
     [SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
     private bool disableButtonsAtEnds;
 
@@ -168,10 +166,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
         if (nextButton)
             nextButton.onClick.AddListener(GoToNextScreen);
-
-        // can only use buttons only if there buttons to press
-        if (nextButton == null && previousButton == null)
-            isInteractable = false;
     }
 
     private IEnumerator CheckForOrientationChange()
