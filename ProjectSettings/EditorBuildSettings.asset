@@ -4,4 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/ScreenSwipe/Demo.unity
+    guid: cb338270da4bade4a81c0f9353cdf870
+  m_configObjects: {}
