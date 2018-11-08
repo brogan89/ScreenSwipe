@@ -34,12 +34,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[SerializeField, Tooltip("Velocity required to change screen")]
 	private int swipeVelocityThreshold = 50;
 
-	[SerializeField, Tooltip("Set to true if you want to be able to skip screens in one swipe. (Not fully tested)")]
-	private bool skipScreen;
-
-	[SerializeField, Tooltip("Velocity require to skip a screen is skipScreen = true")]
-	private int skipScreenVelocityThreshold = 250;
-
 	[Header("Content")]
 	[SerializeField, Tooltip("Will contents be masked?")]
 	private bool maskContent = true;
@@ -93,7 +87,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	private List<RectTransform> screens;
 	public int ScreenCount { get { return screens.Count; } }
 
-
 	// screen orienation change events
 	[Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
 	public bool pollForScreenOrientationChange;
@@ -125,7 +118,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[SerializeField, Tooltip("Length of the tween (s)")]
 	private float tweenTime = 0.5f;
 	[SerializeField]
-	private iTween.EaseType easeType = iTween.EaseType.easeOutExpo;
+	private AnimationCurve ease = AnimationCurve.Linear(0, 0, 1, 1);
 
 	// bounds
 	private Bounds contentBounds;
@@ -195,13 +188,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	private void Reset()
 	{
 		maskContent = true;
-
 		content = transform.GetChild(0) as RectTransform;
-
 		swipeTime = 0.5f;
 		swipeVelocityThreshold = 50;
-		skipScreenVelocityThreshold = 250;
-		easeType = iTween.EaseType.easeOutExpo;
 		spacing = 20;
 	}
 
@@ -249,7 +238,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	{
 		if (pagination)
 		{
-			var newToggle = Instantiate(_toggleMockPrfab, pagination.transform);
+			Toggle newToggle = Instantiate(_toggleMockPrfab, pagination.transform);
 			newToggle.group = pagination;
 			newToggle.isOn = false;
 
@@ -297,7 +286,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <param name="ison"></param>
 	private void PaginationToggleCallback(bool ison)
 	{
-		if (ison)
+		if (ison && !isSwipe)
 		{
 			for (int i = 0; i < toggles.Count; i++)
 			{
@@ -458,7 +447,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			SelectToggle(screenNumber);
 
 			// tween screen
-			TweenPage(-screens[currentScreen].anchoredPosition);
+			// StopCoroutine("TweenPage");
+			StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
 
 			// disable buttons if ends are reached
 			if (disableButtonsAtEnds && previousButton != null && nextButton != null)
@@ -512,7 +502,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			onScreenDragBegin.Invoke();
 
 		// cancel tweening
-		iTween.Stop(gameObject);
+		StopCoroutine("TweenPage");
 
 		// get start data
 		dragStartPos = eventData.position;
@@ -544,6 +534,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 		// got to screen
 		GoToScreen(currentScreen);
+
+		isSwipe = false;
 	}
 
 	/// <summary>
@@ -595,28 +587,16 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 				// get direction of swipe
 				var leftSwipe = velocity.x < 0;
 
-				// check if skip is possible
-				var skip = CanSkipScreen(velX, leftSwipe);
-
-				// get size of screen jump
-				var screenJump = skip ? 2 : 1;
-
 				// assign new page number
-				newPageNo = leftSwipe ? currentScreen + screenJump : currentScreen - screenJump;
+				newPageNo = leftSwipe ? currentScreen + 1 : currentScreen - 1;
 			}
 			else
 			{
 				// get direction of swipe
 				var upSwipe = velocity.y < 0;
 
-				// check if skip is possible
-				var skip = CanSkipScreen(velY, upSwipe);
-
-				// get size of screen jump
-				var screenJump = skip ? 2 : 1;
-
 				// assign new page number
-				newPageNo = upSwipe ? currentScreen + screenJump : currentScreen - screenJump;
+				newPageNo = upSwipe ? currentScreen + 1 : currentScreen - 1;
 			}
 
 			// if valid pageNo then update current page and invoke event
@@ -633,36 +613,25 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	}
 
 	/// <summary>
-	/// Returns if it is possible to skip a page
-	/// </summary>
-	/// <param name="increase"></param>
-	/// <returns></returns>
-	private bool CanSkipScreen(float velocity, bool increase)
-	{
-		if (!skipScreen || skipScreenVelocityThreshold <= 0)
-			return false;
-
-		return increase ? CurrentScreen < ScreenCount - 2 : CurrentScreen > 1;
-	}
-
-	/// <summary>
 	/// Tweens the contents position
 	/// </summary>
 	/// <param name="toPos"></param>
-	private void TweenPage(Vector2 toPos)
+	private IEnumerator TweenPage(Vector2 toPos)
 	{
-		iTween.ValueTo(gameObject, iTween.Hash(
-			"from", content.anchoredPosition,
-			"to", toPos,
-			"easeType", easeType,
-			"time", tweenTime,
-			"onupdate", (Action<Vector2>)(x => SetContentAnchoredPosition(x)),
-			"oncomplete", (Action<Vector2>)(_ =>
-			{
-				if (onScreenTweenEnd != null)
-					onScreenTweenEnd.Invoke(currentScreen);
-			})
-			));
+		Vector2 from = content.anchoredPosition;
+		Vector2 pos = new Vector2();
+		float t = 0;
+
+		while (pos != toPos || t < 1)
+		{
+			pos = Vector2.Lerp(from, toPos, ease.Evaluate(t));
+			t += Time.deltaTime / tweenTime;
+			SetContentAnchoredPosition(pos);
+			yield return null;
+		}
+
+		if (onScreenTweenEnd != null)
+			onScreenTweenEnd.Invoke(currentScreen);
 	}
 	#endregion
 

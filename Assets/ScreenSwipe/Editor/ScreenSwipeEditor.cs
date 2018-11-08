@@ -11,8 +11,6 @@ public class ScreenSwipeEditor : Editor
 	SerializedProperty _swipeType;
 	SerializedProperty _swipeTime;
 	SerializedProperty _swipeVelocityThreshold;
-	SerializedProperty _skipScreen;
-	SerializedProperty _skipScreenVelocityThreshold;
 
 	// content
 	SerializedProperty _maskContent;
@@ -35,7 +33,7 @@ public class ScreenSwipeEditor : Editor
 
 	// tween
 	SerializedProperty _tweenTime;
-	SerializedProperty _easeType;
+	SerializedProperty _ease;
 
 	// events
 	SerializedProperty _onScreenDrag;
@@ -51,8 +49,6 @@ public class ScreenSwipeEditor : Editor
 		_swipeType = serializedObject.FindProperty("swipeType");
 		_swipeTime = serializedObject.FindProperty("swipeTime");
 		_swipeVelocityThreshold = serializedObject.FindProperty("swipeVelocityThreshold");
-		_skipScreen = serializedObject.FindProperty("skipScreen");
-		_skipScreenVelocityThreshold = serializedObject.FindProperty("skipScreenVelocityThreshold");
 
 		// content
 		_maskContent = serializedObject.FindProperty("maskContent");
@@ -75,7 +71,7 @@ public class ScreenSwipeEditor : Editor
 
 		// tween
 		_tweenTime = serializedObject.FindProperty("tweenTime");
-		_easeType = serializedObject.FindProperty("easeType");
+		_ease = serializedObject.FindProperty("ease");
 
 		// events
 		_onScreenDrag = serializedObject.FindProperty("onScreenDragBegin");
@@ -98,9 +94,6 @@ public class ScreenSwipeEditor : Editor
 		EditorGUILayout.PropertyField(_swipeType);
 		EditorGUILayout.PropertyField(_swipeTime);
 		EditorGUILayout.PropertyField(_swipeVelocityThreshold);
-		EditorGUILayout.PropertyField(_skipScreen);
-		if (_skipScreen.boolValue)
-			EditorGUILayout.PropertyField(_skipScreenVelocityThreshold);
 
 		// contents
 		EditorGUILayout.PropertyField(_maskContent);
@@ -125,7 +118,8 @@ public class ScreenSwipeEditor : Editor
 
 		// tween
 		EditorGUILayout.PropertyField(_tweenTime);
-		EditorGUILayout.PropertyField(_easeType);
+		EditorGUILayout.PropertyField(_ease);
+
 
 		//events
 		EditorGUILayout.PropertyField(_onScreenDrag);

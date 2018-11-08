@@ -19,3 +19,8 @@
 *.DS_Store
 
 .collabignore
+
+# extra ignores
+.vscode/
+**/ConsolePro/
+**/ConsolePro.meta
