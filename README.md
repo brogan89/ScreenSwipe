@@ -15,5 +15,3 @@ See the Demo scene for best implementation.
 This script used bits of code from and inspired by:
 - Unity's [ScrollRect.cs](https://bitbucket.org/Unity-Technologies/ui/src/0bd08e22bc17bdf80bf7b997a4b43877ae4ee9ac/UnityEngine.UI/UI/Core/ScrollRect.cs?at=5.2&fileviewer=file-view-default#ScrollRect.cs-12,178) 
 - Unity-UI-Extensions [HorizontalScrollSnap](https://bitbucket.org/UnityUIExtensions/unity-ui-extensions/src/8b8c6f5c3adb0a953f04d8b74d4a12c004929458/Scripts/Layout/HorizontalScrollSnap.cs?at=master&fileviewer=file-view-default#HorizontalScrollSnap.cs-12)
-
-Note: The itween script I have in this repo is a slight tweek of the script that is in the asset store.
