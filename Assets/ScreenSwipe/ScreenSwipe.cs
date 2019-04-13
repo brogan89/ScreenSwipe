@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,27 +8,26 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 [RequireComponent(typeof(RectTransform), typeof(Mask), typeof(Image))]
 public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
 	public RectTransform rectTransform { get { return (RectTransform)transform; } }
 
-	public enum SwipeType { Horizonal, Vertical }
+	public enum SwipeType
+    {
+        Horizontal,
+        Vertical
+    }
 
 	[Header("Swipe")]
 	[SerializeField]
-	private SwipeType swipeType = SwipeType.Horizonal;
+	private SwipeType swipeType = SwipeType.Horizontal;
 
 	[SerializeField, Tooltip("Time a swipe must happen within (s)")]
 	private float swipeTime = 0.5f;
 	private float startTime;
 	private bool isSwipe;
-
-	//[SerializeField]
+    
 	private Vector2 velocity;
 
 	[SerializeField, Tooltip("Velocity required to change screen")]
@@ -87,26 +86,27 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	private List<RectTransform> screens;
 	public int ScreenCount { get { return screens.Count; } }
 
-	// screen orienation change events
+	// screen orientation change events
 	[Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
 	public bool pollForScreenOrientationChange;
+
 	[SerializeField, Tooltip("A key for testing orientation change event in the editor")]
 	private KeyCode editorRefreshKey = KeyCode.F1;
 	private ScreenOrientation screenOrientation;
 
-
-	[SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
+    [SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
 	private ToggleGroup pagination;
-	private Toggle _toggleMockPrfab;
+	private Toggle _toggleMockPrefab;
 	private List<Toggle> toggles;
 
-	[Header("Controlls (Optional)")]
+	[Header("Controls (Optional)")]
 	[Tooltip("True = Acts like a normal screenRect but with snapping\nFalse = Can only change screens with buttons or from another script")]
 	public bool isInteractable = true;
 
 	[SerializeField]
 	private Button nextButton;
 	public Button NextButton { get { return nextButton; } }
+
 	[SerializeField]
 	private Button previousButton;
 	public Button PreviousButton { get { return previousButton; } }
@@ -117,6 +117,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[Header("Tween")]
 	[SerializeField, Tooltip("Length of the tween (s)")]
 	private float tweenTime = 0.5f;
+
 	[SerializeField]
 	private AnimationCurve ease = AnimationCurve.Linear(0, 0, 1, 1);
 
@@ -162,7 +163,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			{
 				screenOrientation = Screen.orientation;
 
-				Debug.LogFormat("SwcreenSwipe Orientation change: {0}", screenOrientation);
+				Debug.LogFormat("ScreenSwipe Orientation change: {0}", screenOrientation);
 
 				// refresh contents on the change
 				RefreshContents();
@@ -200,107 +201,100 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// </summary>
 	private void Pagination_Init()
 	{
-		if (pagination)
-		{
-			toggles = pagination.GetComponentsInChildren<Toggle>().ToList();
+        if (!pagination) return;
 
-			// store the first toggle to use for instantiating later
-			if (toggles[0] != null && _toggleMockPrfab == null)
-				_toggleMockPrfab = toggles[0];
+        toggles = pagination.GetComponentsInChildren<Toggle>().ToList();
 
-			// loop through and assign toggle properties
-			for (int i = 0; i < toggles.Count; i++)
-			{
-				toggles[i].isOn = false;
-				toggles[i].group = pagination;
-				toggles[i].onValueChanged.AddListener(PaginationToggleCallback);
-			}
-		}
-	}
+        // store the first toggle to use for instantiating later
+        if (toggles[0] != null && _toggleMockPrefab == null)
+            _toggleMockPrefab = toggles[0];
+
+        // loop through and assign toggle properties
+        for (int i = 0; i < toggles.Count; i++)
+        {
+            toggles[i].isOn = false;
+            toggles[i].group = pagination;
+            toggles[i].onValueChanged.AddListener(PaginationToggleCallback);
+        }
+    }
 
 	private void SelectToggle(int index)
-	{
-		if (pagination)
-		{
-			try
-			{
-				toggles[currentScreen].isOn = true;
-			}
-			catch (ArgumentOutOfRangeException e)
-			{
-				Debug.LogError(e);
-				Debug.LogError(index);
-			}
-		}
-	}
+    {
+        if (!pagination) return;
+
+        try
+        {
+            toggles[currentScreen].isOn = true;
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            Debug.LogError(e);
+            Debug.LogError(index);
+        }
+    }
 
 	private void AddPaginationToggle()
 	{
-		if (pagination)
-		{
-			Toggle newToggle = Instantiate(_toggleMockPrfab, pagination.transform);
-			newToggle.group = pagination;
-			newToggle.isOn = false;
+        if (!pagination) return;
 
-			// for some reason shit gets turned off so this is a just in case thing
-			newToggle.gameObject.SetActive(true);
-			newToggle.enabled = true;
-			newToggle.GetComponentInChildren<Image>().enabled = true;
+        Toggle newToggle = Instantiate(_toggleMockPrefab, pagination.transform);
+        newToggle.group = pagination;
+        newToggle.isOn = false;
 
-
-			toggles.Add(newToggle);
-		}
-	}
+        // for some reason shit gets turned off so this is a just in case thing
+        newToggle.gameObject.SetActive(true);
+        newToggle.enabled = true;
+        newToggle.GetComponentInChildren<Image>().enabled = true;
+        
+        toggles.Add(newToggle);
+    }
 
 	private void RemovePaginationToggle(int index)
 	{
-		// pagination
-		if (pagination)
-		{
-			// remove from list
-			toggles.RemoveAt(index);
+        if (!pagination) return;
 
-			// destroy gameobject
-			Destroy(toggles[index].gameObject);
-		}
-	}
+        // remove from list
+        toggles.RemoveAt(index);
+
+        // destroy gameObject
+        Destroy(toggles[index].gameObject);
+    }
 
 	private void RemoveAllPaginationToggles()
 	{
-		if (pagination)
-		{
-			// clear toggle list
-			toggles.Clear();
+        if (!pagination) return;
 
-			for (int i = 0; i < pagination.transform.childCount; i++)
-			{
-				// destroy gameobject
-				Destroy(pagination.transform.GetChild(i).gameObject);
-			}
-		}
-	}
+        // clear toggle list
+        toggles.Clear();
+
+        for (int i = 0; i < pagination.transform.childCount; i++)
+        {
+            // destroy gameObject
+            Destroy(pagination.transform.GetChild(i).gameObject);
+        }
+    }
 
 	/// <summary>
-	/// Callback function from pagination toggles to change screen opon clicking toggle
+	/// Callback function from pagination toggles to change screen upon clicking toggle
 	/// </summary>
-	/// <param name="ison"></param>
-	private void PaginationToggleCallback(bool ison)
-	{
-		if (ison && !isSwipe)
-		{
-			for (int i = 0; i < toggles.Count; i++)
-			{
-				if (toggles[i].isOn)
-				{
-					GoToScreen(i);
-					break;
-				}
-			}
-		}
-	}
+	/// <param name="isOn"></param>
+	private void PaginationToggleCallback(bool isOn)
+    {
+        if (!isOn) return;
+        if (isSwipe) return;
+
+        for (int i = 0; i < toggles.Count; i++)
+        {
+            if (toggles[i].isOn)
+            {
+                GoToScreen(i);
+                break;
+            }
+        }
+    }
 	#endregion
 
-	#region Screen Mangement
+	#region Screen Mangement / Public API
 	/// <summary>
 	/// Sets the screens positions and calculates the contents size
 	/// </summary>
@@ -310,46 +304,45 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 		screens = new List<RectTransform>();
 
-		if (content)
-		{
-			for (int i = 0; i < content.childCount; i++)
-			{
-				// assign to list
-				screens.Add(content.GetChild(i).transform as RectTransform);
+        if (!content) return;
 
-				// pivot and anchors
-				screens[i].pivot = screens[i].anchorMin = screens[i].anchorMax =
-									swipeType == SwipeType.Horizonal
-									? new Vector2(0, 0.5f)
-									: new Vector2(0.5f, 0);
+        for (int i = 0; i < content.childCount; i++)
+        {
+            // assign to list
+            screens.Add(content.GetChild(i).transform as RectTransform);
 
-				// size
-				screens[i].sizeDelta = screenSize;
+            // pivot and anchors
+            screens[i].pivot = screens[i].anchorMin = screens[i].anchorMax =
+                swipeType == SwipeType.Horizontal
+                    ? new Vector2(0, 0.5f)
+                    : new Vector2(0.5f, 0);
 
-				// scale
-				screens[i].localScale = Vector3.one;
+            // size
+            screens[i].sizeDelta = screenSize;
 
-				// position
-				screens[i].anchoredPosition = swipeType == SwipeType.Horizonal
-							? new Vector2((screenSize.x * i) + (spacing * i), 0)
-							: new Vector2(0, (screenSize.y * i) + (spacing * i));
-			}
+            // scale
+            screens[i].localScale = Vector3.one;
 
-			// set content anchords and pivot
-			content.pivot = content.anchorMin = content.anchorMax =
-							swipeType == SwipeType.Horizonal
-							? new Vector2(0, 0.5f)
-							: new Vector2(0.5f, 0);
+            // position
+            screens[i].anchoredPosition = swipeType == SwipeType.Horizontal
+                ? new Vector2((screenSize.x * i) + (spacing * i), 0)
+                : new Vector2(0, (screenSize.y * i) + (spacing * i));
+        }
 
-			// set content size
-			content.sizeDelta = swipeType == SwipeType.Horizonal
-							? new Vector2((screenSize.x + spacing) * screens.Count - spacing, screenSize.y)
-							: new Vector2(screenSize.x, (screenSize.y + spacing) * screens.Count - spacing);
-		}
-	}
+        // set content anchors and pivot
+        content.pivot = content.anchorMin = content.anchorMax =
+            swipeType == SwipeType.Horizontal
+                ? new Vector2(0, 0.5f)
+                : new Vector2(0.5f, 0);
+
+        // set content size
+        content.sizeDelta = swipeType == SwipeType.Horizontal
+            ? new Vector2((screenSize.x + spacing) * screens.Count - spacing, screenSize.y)
+            : new Vector2(screenSize.x, (screenSize.y + spacing) * screens.Count - spacing);
+    }
 
 	/// <summary>
-	/// Calls private corouitine RefreshContentsCoroutine()
+	/// Calls private coroutine RefreshContentsCoroutine()
 	/// <para>Waits until end of frame and then resets screens and pagination</para>
 	/// </summary>
 	public void RefreshContents()
@@ -392,18 +385,18 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		StartCoroutine(RefreshContentsCoroutine());
 	}
 
-	/// <summary>
-	/// Removes screen from list and recalculates contents width 
-	/// </summary>
-	/// <param name="screenNumber"></param>
-	public void RemoveScreen(int screenNumber, Action callback = null)
+    /// <summary>
+    /// Removes screen from list and recalculates contents width 
+    /// </summary>
+    /// <param name="screenNumber"></param>
+    public void RemoveScreen(int screenNumber)
 	{
 		if (IsWithinScreenCount(screenNumber))
 		{
 			// remove from list
 			screens.RemoveAt(screenNumber);
 
-			// destroy gameobject
+			// destroy gameObject
 			Destroy(content.GetChild(screenNumber).gameObject);
 
 			// pagination
@@ -413,7 +406,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			StartCoroutine(RefreshContentsCoroutine());
 		}
 		else
-			Debug.LogWarningFormat("ScreenNumber: '{0}' doesnt exist", screenNumber);
+			Debug.LogWarningFormat("ScreenNumber: '{0}' doesn't exist", screenNumber);
 	}
 
 	public void RemoveAllScreens()
@@ -516,8 +509,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	{
 		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
 			return;
-
-		/// Wrapper fucntion <see cref="ScrollRect.OnDrag(PointerEventData)"/>
+        
 		DragContent(eventData);
 
 		// validate swipe boolean
@@ -559,7 +551,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		var velX = Mathf.Abs(velocity.x);
 		var velY = Mathf.Abs(velocity.y);
 
-		if (swipeType == SwipeType.Horizonal)
+		if (swipeType == SwipeType.Horizontal)
 			isSwipeTypeAndEnoughVelocity = velX > velY && velX > swipeVelocityThreshold;
 		else
 			isSwipeTypeAndEnoughVelocity = velY > velX && velY > swipeVelocityThreshold;
@@ -574,43 +566,38 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// </summary>
 	private void ScreenChangeValidate()
 	{
-		if (isSwipe)
-		{
-			// get absolute values of both velocity axis
-			var velX = Mathf.Abs(velocity.x);
-			var velY = Mathf.Abs(velocity.y);
+        if (!isSwipe) return;
 
-			int newPageNo = -1;
+        int newPageNo = -1;
 
-			if (swipeType == SwipeType.Horizonal)
-			{
-				// get direction of swipe
-				var leftSwipe = velocity.x < 0;
+        if (swipeType == SwipeType.Horizontal)
+        {
+            // get direction of swipe
+            var leftSwipe = velocity.x < 0;
 
-				// assign new page number
-				newPageNo = leftSwipe ? currentScreen + 1 : currentScreen - 1;
-			}
-			else
-			{
-				// get direction of swipe
-				var upSwipe = velocity.y < 0;
+            // assign new page number
+            newPageNo = leftSwipe ? currentScreen + 1 : currentScreen - 1;
+        }
+        else
+        {
+            // get direction of swipe
+            var upSwipe = velocity.y < 0;
 
-				// assign new page number
-				newPageNo = upSwipe ? currentScreen + 1 : currentScreen - 1;
-			}
+            // assign new page number
+            newPageNo = upSwipe ? currentScreen + 1 : currentScreen - 1;
+        }
 
-			// if valid pageNo then update current page and invoke event
-			if (IsWithinScreenCount(newPageNo))
-			{
-				// change current page
-				currentScreen = newPageNo;
+        // if valid pageNo then update current page and invoke event
+        if (IsWithinScreenCount(newPageNo))
+        {
+            // change current page
+            currentScreen = newPageNo;
 
-				// invoke changed event
-				if (onScreenChanged != null)
-					onScreenChanged.Invoke(currentScreen);
-			}
-		}
-	}
+            // invoke changed event
+            if (onScreenChanged != null)
+                onScreenChanged.Invoke(currentScreen);
+        }
+    }
 
 	/// <summary>
 	/// Tweens the contents position
@@ -638,14 +625,14 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	#region Functions From Unity ScrollRect
 
 	/* Note:
-        * Everything in this region I sourced from Unity's ScrollRect script and rejigged to work in this script
-        * Sources from: https://bitbucket.org/Unity-Technologies/ui 
-        * Folder path: UI/UnityEngine.UI/UI/Core/ScrollRect.cs
-        */
+     * Everything in this region I sourced from Unity's ScrollRect script and rejigged to work in this script
+     * Sources from: https://bitbucket.org/Unity-Technologies/ui 
+     * Folder path: UI/UnityEngine.UI/UI/Core/ScrollRect.cs
+     */
 
 
 	/// <summary>
-	/// Wrapper fucntion <see cref="ScrollRect.OnDrag(PointerEventData)"/>
+	/// Wrapper function <see cref="ScrollRect.OnDrag(PointerEventData)"/>
 	/// </summary>
 	/// <param name="eventData"></param>
 	private void DragContent(PointerEventData eventData)
@@ -677,7 +664,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (swipeType == SwipeType.Vertical)
 			position.x = content.anchoredPosition.x;
 
-		if (swipeType == SwipeType.Horizonal)
+		if (swipeType == SwipeType.Horizontal)
 			position.y = content.anchoredPosition.y;
 
 		if (position != content.anchoredPosition)
@@ -759,8 +746,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 	#region Editing
 	[Header("Editing")]
-	[SerializeField]
-	[Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
+	[SerializeField, Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
 	private int editingScreen;
 	public void EditingScreen()
 	{
