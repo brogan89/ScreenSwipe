@@ -11,206 +11,206 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RectTransform), typeof(Mask), typeof(Image))]
 public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
-	public RectTransform rectTransform { get { return (RectTransform)transform; } }
+    public RectTransform rectTransform { get { return (RectTransform)transform; } }
 
-	public enum SwipeType
+    public enum SwipeType
     {
         Horizontal,
         Vertical
     }
 
-	[Header("Swipe")]
-	[SerializeField]
-	private SwipeType swipeType = SwipeType.Horizontal;
+    [Header("Swipe")]
+    [SerializeField]
+    private SwipeType swipeType = SwipeType.Horizontal;
 
-	[SerializeField, Tooltip("Time a swipe must happen within (s)")]
-	private float swipeTime = 0.5f;
-	private float startTime = 0f;
-	private bool isSwipe = false;
-    
-	private Vector2 velocity;
+    [SerializeField, Tooltip("Time a swipe must happen within (s)")]
+    private float swipeTime = 0.5f;
+    private float startTime = 0f;
+    private bool isSwipe = false;
 
-	[SerializeField, Tooltip("Velocity required to change screen")]
-	private int swipeVelocityThreshold = 50;
+    private Vector2 velocity;
 
-	[Header("Content")]
-	[SerializeField, Tooltip("Will contents be masked?")]
-	private bool maskContent = true;
+    [SerializeField, Tooltip("Velocity required to change screen")]
+    private int swipeVelocityThreshold = 50;
 
-	private Mask _mask = null;
-	private Mask Mask
-	{
-		get
-		{
-			if (_mask == null)
-				_mask = GetComponent<Mask>();
-			return _mask;
-		}
-	}
+    [Header("Content")]
+    [SerializeField, Tooltip("Will contents be masked?")]
+    private bool maskContent = true;
 
-	private Image _maskImage = null;
-	private Image MaskImage
-	{
-		get
-		{
-			if (_maskImage == null)
-				_maskImage = GetComponent<Image>();
-			return _maskImage;
-		}
-	}
+    private Mask _mask = null;
+    private Mask Mask
+    {
+        get
+        {
+            if (_mask == null)
+                _mask = GetComponent<Mask>();
+            return _mask;
+        }
+    }
 
-	[SerializeField, Tooltip("Starting screen. Note: a 0 indexed array")]
-	private int startingScreen = 0;
+    private Image _maskImage = null;
+    private Image MaskImage
+    {
+        get
+        {
+            if (_maskImage == null)
+                _maskImage = GetComponent<Image>();
+            return _maskImage;
+        }
+    }
 
-	[SerializeField]
-	private int currentScreen = 0;
-	public int CurrentScreen { get { return currentScreen; } }
+    [SerializeField, Tooltip("Starting screen. Note: a 0 indexed array")]
+    private int startingScreen = 0;
 
-	[SerializeField, Tooltip("Parent object which contain the screens")]
-	private RectTransform content = null;
-	public RectTransform Content { get { return content; } set { content = value; } }
+    [SerializeField]
+    private int currentScreen = 0;
+    public int CurrentScreen { get { return currentScreen; } }
 
-	[SerializeField, Tooltip("Distance between screens")]
-	private float spacing = 20f;
-	public float Spacing
-	{
-		get { return spacing; }
-		set
-		{
-			spacing = value;
-			SetScreenPositionsAndContentWidth();
-		}
-	}
+    [SerializeField, Tooltip("Parent object which contain the screens")]
+    private RectTransform content = null;
+    public RectTransform Content { get { return content; } set { content = value; } }
 
-	[SerializeField]
-	private List<RectTransform> screens = null;
-	public int ScreenCount { get { return screens.Count; } }
+    [SerializeField, Tooltip("Distance between screens")]
+    private float spacing = 20f;
+    public float Spacing
+    {
+        get { return spacing; }
+        set
+        {
+            spacing = value;
+            SetScreenPositionsAndContentWidth();
+        }
+    }
 
-	// screen orientation change events
+    [SerializeField]
+    private List<RectTransform> screens = null;
+    public int ScreenCount { get { return screens.Count; } }
+
+    // screen orientation change events
     [Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
     public bool pollForScreenOrientationChange = false;
 
-	[SerializeField, Tooltip("A key for testing orientation change event in the editor")]
-	private KeyCode editorRefreshKey = KeyCode.F1;
-	private ScreenOrientation screenOrientation;
+    [SerializeField, Tooltip("A key for testing orientation change event in the editor")]
+    private KeyCode editorRefreshKey = KeyCode.F1;
+    private ScreenOrientation screenOrientation;
 
     [SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
-	private ToggleGroup pagination = null;
-	private Toggle _toggleMockPrefab = null;
-	private List<Toggle> toggles = null;
+    private ToggleGroup pagination = null;
+    private Toggle _toggleMockPrefab = null;
+    private List<Toggle> toggles = null;
 
-	[Header("Controls (Optional)")]
-	[Tooltip("True = Acts like a normal screenRect but with snapping\nFalse = Can only change screens with buttons or from another script")]
-	public bool isInteractable = true;
+    [Header("Controls (Optional)")]
+    [Tooltip("True = Acts like a normal screenRect but with snapping\nFalse = Can only change screens with buttons or from another script")]
+    public bool isInteractable = true;
 
-	[SerializeField]
-	private Button nextButton = null;
-	public Button NextButton { get { return nextButton; } }
+    [SerializeField]
+    private Button nextButton = null;
+    public Button NextButton { get { return nextButton; } }
 
-	[SerializeField]
-	private Button previousButton = null;
-	public Button PreviousButton { get { return previousButton; } }
+    [SerializeField]
+    private Button previousButton = null;
+    public Button PreviousButton { get { return previousButton; } }
 
-	[SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
-	private bool disableButtonsAtEnds = false;
+    [SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
+    private bool disableButtonsAtEnds = false;
 
-	[Header("Tween")]
-	[SerializeField, Tooltip("Length of the tween (s)")]
-	private float tweenTime = 0.5f;
+    [Header("Tween")]
+    [SerializeField, Tooltip("Length of the tween (s)")]
+    private float tweenTime = 0.5f;
 
-	[SerializeField]
-	private AnimationCurve ease = AnimationCurve.Linear(0, 0, 1, 1);
+    [SerializeField]
+    private AnimationCurve ease = AnimationCurve.Linear(0, 0, 1, 1);
 
-	// bounds
-	private Bounds contentBounds;
-	private Bounds viewBounds;
+    // bounds
+    private Bounds contentBounds;
+    private Bounds viewBounds;
 
-	// start positions
-	private Vector2 pointerStartLocalCursor;
-	private Vector2 dragStartPos;
+    // start positions
+    private Vector2 pointerStartLocalCursor;
+    private Vector2 dragStartPos;
 
-	// events
-	[Serializable]
-	public class ScreenEvent : UnityEvent<int> { }
+    // events
+    [Serializable]
+    public class ScreenEvent : UnityEvent<int> { }
 
-	[Space]
-	public UnityEvent onScreenDragBegin = null;
-	public ScreenEvent onScreenChanged = null;
-	public ScreenEvent onScreenTweenEnd = null;
+    [Space]
+    public UnityEvent onScreenDragBegin = null;
+    public ScreenEvent onScreenChanged = null;
+    public ScreenEvent onScreenTweenEnd = null;
 
     private Coroutine tweenPageCoroutine = null;
 
-	private void Start()
-	{
-		SetScreenPositionsAndContentWidth();
-		Pagination_Init();
-		GoToScreen(startingScreen);
+    private void Start()
+    {
+        SetScreenPositionsAndContentWidth();
+        Pagination_Init();
+        GoToScreen(startingScreen);
 
-		// button listeners
-		if (previousButton)
-			previousButton.onClick.AddListener(GoToPreviousScreen);
+        // button listeners
+        if (previousButton)
+            previousButton.onClick.AddListener(GoToPreviousScreen);
 
-		if (nextButton)
-			nextButton.onClick.AddListener(GoToNextScreen);
-	}
+        if (nextButton)
+            nextButton.onClick.AddListener(GoToNextScreen);
+    }
 
     /// <summary>
     /// Checks for orientation changes
     /// </summary>
     /// <returns>Coroutine</returns>
 	private IEnumerator CheckForOrientationChange()
-	{
-		// set initial orientation
-		screenOrientation = Screen.orientation;
+    {
+        // set initial orientation
+        screenOrientation = Screen.orientation;
 
         // Create and cache delay, stops garbage being generated every frame
         // This coroutine doesn't need to be run as fast as possible, once per frame is fast enough
         var waitForEndOfFrame = new WaitForEndOfFrame();
 
-		while (enabled)
-		{
-			if (screenOrientation != Screen.orientation || (Application.isEditor && Input.GetKeyDown(editorRefreshKey)))
-			{
-				screenOrientation = Screen.orientation;
+        while (enabled)
+        {
+            if (screenOrientation != Screen.orientation || (Application.isEditor && Input.GetKeyDown(editorRefreshKey)))
+            {
+                screenOrientation = Screen.orientation;
 
-				Debug.LogFormat("ScreenSwipe Orientation change: {0}", screenOrientation);
+                Debug.LogFormat("ScreenSwipe Orientation change: {0}", screenOrientation);
 
-				// refresh contents on the change
-				RefreshContents();
-			}
-			yield return waitForEndOfFrame;
-		}
-	}
+                // refresh contents on the change
+                RefreshContents();
+            }
+            yield return waitForEndOfFrame;
+        }
+    }
 
-	private void OnEnable()
-	{
-		// refresh contents on screen change
-		if (pollForScreenOrientationChange)
-			StartCoroutine(CheckForOrientationChange());
-	}
+    private void OnEnable()
+    {
+        // refresh contents on screen change
+        if (pollForScreenOrientationChange)
+            StartCoroutine(CheckForOrientationChange());
+    }
 
-	private void OnValidate()
-	{
-		Mask.showMaskGraphic = false;
-		Mask.enabled = maskContent;
-		MaskImage.enabled = maskContent;
-	}
+    private void OnValidate()
+    {
+        Mask.showMaskGraphic = false;
+        Mask.enabled = maskContent;
+        MaskImage.enabled = maskContent;
+    }
 
-	private void Reset()
-	{
-		maskContent = true;
-		content = transform.GetChild(0) as RectTransform;
-		swipeTime = 0.5f;
-		swipeVelocityThreshold = 50;
-		spacing = 20;
-	}
+    private void Reset()
+    {
+        maskContent = true;
+        content = transform.GetChild(0) as RectTransform;
+        swipeTime = 0.5f;
+        swipeVelocityThreshold = 50;
+        spacing = 20;
+    }
 
-	#region Pagination
-	/// <summary>
-	/// Initializes the pagination toggles
-	/// </summary>
-	private void Pagination_Init()
-	{
+    #region Pagination
+    /// <summary>
+    /// Initializes the pagination toggles
+    /// </summary>
+    private void Pagination_Init()
+    {
         if (!pagination) return;
 
         toggles = pagination.GetComponentsInChildren<Toggle>().ToList();
@@ -249,7 +249,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// Adds a pagination toggle
     /// </summary>
 	private void AddPaginationToggle()
-	{
+    {
         if (!pagination) return;
 
         Toggle newToggle = Instantiate(_toggleMockPrefab, pagination.transform);
@@ -260,7 +260,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         newToggle.gameObject.SetActive(true);
         newToggle.enabled = true;
         newToggle.GetComponentInChildren<Image>().enabled = true;
-        
+
         toggles.Add(newToggle);
     }
 
@@ -268,8 +268,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// Removes a pagination toggle
     /// </summary>
     /// <param name="index">Index to remove toggle</param>
-	private void RemovePaginationToggle(int index)
-	{
+    private void RemovePaginationToggle(int index)
+    {
         if (!pagination) return;
 
         // remove from list
@@ -283,7 +283,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// Removes all pagination toggles
     /// </summary>
 	private void RemoveAllPaginationToggles()
-	{
+    {
         if (!pagination) return;
 
         // clear toggle list
@@ -296,11 +296,11 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         }
     }
 
-	/// <summary>
-	/// Callback function from pagination toggles to change screen upon clicking toggle
-	/// </summary>
-	/// <param name="isOn">Is the toggle on</param>
-	private void PaginationToggleCallback(bool isOn)
+    /// <summary>
+    /// Callback function from pagination toggles to change screen upon clicking toggle
+    /// </summary>
+    /// <param name="isOn">Is the toggle on</param>
+    private void PaginationToggleCallback(bool isOn)
     {
         if (!isOn) return;
         if (isSwipe) return;
@@ -314,17 +314,17 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             }
         }
     }
-	#endregion
+    #endregion
 
-	#region Screen Mangement / Public API
-	/// <summary>
-	/// Sets the screens positions and calculates the contents size
-	/// </summary>
-	private void SetScreenPositionsAndContentWidth()
-	{
-		Vector2 screenSize = rectTransform.rect.size;
+    #region Screen Mangement / Public API
+    /// <summary>
+    /// Sets the screens positions and calculates the contents size
+    /// </summary>
+    private void SetScreenPositionsAndContentWidth()
+    {
+        Vector2 screenSize = rectTransform.rect.size;
 
-		screens = new List<RectTransform>();
+        screens = new List<RectTransform>();
 
         if (!content) return;
 
@@ -363,151 +363,151 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
             : new Vector2(screenSize.x, (screenSize.y + spacing) * screens.Count - spacing);
     }
 
-	/// <summary>
-	/// Calls private coroutine RefreshContentsCoroutine()
-	/// <para>Waits until end of frame and then resets screens and pagination</para>
-	/// </summary>
-	public void RefreshContents()
-	{
-		StartCoroutine(RefreshContentsCoroutine());
-	}
+    /// <summary>
+    /// Calls private coroutine RefreshContentsCoroutine()
+    /// <para>Waits until end of frame and then resets screens and pagination</para>
+    /// </summary>
+    public void RefreshContents()
+    {
+        StartCoroutine(RefreshContentsCoroutine());
+    }
 
-	/// <summary>
-	/// Waits until end of frame and then resets screens and pagination
-	/// </summary>
-	/// <returns>Coroutine</returns>
-	private IEnumerator RefreshContentsCoroutine()
-	{
-		yield return new WaitForEndOfFrame();
-		SetScreenPositionsAndContentWidth();
-		Pagination_Init();
-	}
+    /// <summary>
+    /// Waits until end of frame and then resets screens and pagination
+    /// </summary>
+    /// <returns>Coroutine</returns>
+    private IEnumerator RefreshContentsCoroutine()
+    {
+        yield return new WaitForEndOfFrame();
+        SetScreenPositionsAndContentWidth();
+        Pagination_Init();
+    }
 
-	/// <summary>
-	/// Adds a screen to the list then recalculates the contents width
-	/// </summary>
-	/// <param name="newScreen">Screen to add</param>
-	/// <param name="screenNumber">Default as last screen. index 0 - </param>
-	public void AddScreen(RectTransform newScreen, int screenNumber = -1)
-	{
-		newScreen.transform.SetParent(content);
+    /// <summary>
+    /// Adds a screen to the list then recalculates the contents width
+    /// </summary>
+    /// <param name="newScreen">Screen to add</param>
+    /// <param name="screenNumber">Default as last screen. index 0 - </param>
+    public void AddScreen(RectTransform newScreen, int screenNumber = -1)
+    {
+        newScreen.transform.SetParent(content);
 
-		if (IsWithinScreenCount(screenNumber))
-			newScreen.SetSiblingIndex(screenNumber);
-		else
-			newScreen.SetAsLastSibling();
+        if (IsWithinScreenCount(screenNumber))
+            newScreen.SetSiblingIndex(screenNumber);
+        else
+            newScreen.SetAsLastSibling();
 
-		// add to list
-		screens.Add(newScreen);
+        // add to list
+        screens.Add(newScreen);
 
-		// pagination
-		AddPaginationToggle();
+        // pagination
+        AddPaginationToggle();
 
-		//refresh
-		StartCoroutine(RefreshContentsCoroutine());
-	}
+        //refresh
+        StartCoroutine(RefreshContentsCoroutine());
+    }
 
     /// <summary>
     /// Removes screen from list and recalculates contents width 
     /// </summary>
     /// <param name="screenNumber">Screen number to remove</param>
     public void RemoveScreen(int screenNumber)
-	{
-		if (IsWithinScreenCount(screenNumber))
-		{
-			// remove from list
-			screens.RemoveAt(screenNumber);
+    {
+        if (IsWithinScreenCount(screenNumber))
+        {
+            // remove from list
+            screens.RemoveAt(screenNumber);
 
-			// destroy gameObject
-			Destroy(content.GetChild(screenNumber).gameObject);
+            // destroy gameObject
+            Destroy(content.GetChild(screenNumber).gameObject);
 
-			// pagination
-			RemovePaginationToggle(screenNumber);
+            // pagination
+            RemovePaginationToggle(screenNumber);
 
-			// refresh
-			StartCoroutine(RefreshContentsCoroutine());
-		}
-		else
-			Debug.LogWarningFormat("ScreenNumber: '{0}' doesn't exist", screenNumber);
-	}
+            // refresh
+            StartCoroutine(RefreshContentsCoroutine());
+        }
+        else
+            Debug.LogWarningFormat("ScreenNumber: '{0}' doesn't exist", screenNumber);
+    }
 
     /// <summary>
     /// Removes all screens
     /// </summary>
 	public void RemoveAllScreens()
-	{
-		Debug.Log("Removing Screens : " + content.childCount);
+    {
+        Debug.Log("Removing Screens : " + content.childCount);
 
-		// clear list
-		screens.Clear();
+        // clear list
+        screens.Clear();
 
-		for (int i = 0; i < content.childCount; i++)
-		{
-			// destroy screen game object
-			Destroy(content.GetChild(i).gameObject);
-		}
+        for (int i = 0; i < content.childCount; i++)
+        {
+            // destroy screen game object
+            Destroy(content.GetChild(i).gameObject);
+        }
 
-		RemoveAllPaginationToggles();
-	}
+        RemoveAllPaginationToggles();
+    }
 
-	/// <summary>
-	/// Tweens to a specific screen
-	/// </summary>
-	/// <param name="screenNumber">Screen number to tween to</param>
-	public void GoToScreen(int screenNumber)
-	{
-		if (IsWithinScreenCount(screenNumber))
-		{
-			// set current screen
-			currentScreen = screenNumber;
+    /// <summary>
+    /// Tweens to a specific screen
+    /// </summary>
+    /// <param name="screenNumber">Screen number to tween to</param>
+    public void GoToScreen(int screenNumber)
+    {
+        if (IsWithinScreenCount(screenNumber))
+        {
+            // set current screen
+            currentScreen = screenNumber;
 
-			// pagination
-			SelectToggle();
+            // pagination
+            SelectToggle();
 
-			// tween screen
-			tweenPageCoroutine = StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
+            // tween screen
+            tweenPageCoroutine = StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
 
-			// disable buttons if ends are reached
-			if (disableButtonsAtEnds && previousButton != null && nextButton != null)
-			{
-				if (currentScreen == 0)
-				{
-					previousButton.gameObject.SetActive(false);
-					nextButton.gameObject.SetActive(true);
-				}
-				else if (currentScreen == ScreenCount - 1)
-				{
-					nextButton.gameObject.SetActive(false);
-					previousButton.gameObject.SetActive(true);
-				}
-				else
-				{
-					previousButton.gameObject.SetActive(true);
-					nextButton.gameObject.SetActive(true);
-				}
-			}
-		}
-		else
-			Debug.LogErrorFormat("Invalid screen number '{0}'. Must be between 0 and {1}", screenNumber, screens.Count - 1);
-	}
+            // disable buttons if ends are reached
+            if (disableButtonsAtEnds && previousButton != null && nextButton != null)
+            {
+                if (currentScreen == 0)
+                {
+                    previousButton.gameObject.SetActive(false);
+                    nextButton.gameObject.SetActive(true);
+                }
+                else if (currentScreen == ScreenCount - 1)
+                {
+                    nextButton.gameObject.SetActive(false);
+                    previousButton.gameObject.SetActive(true);
+                }
+                else
+                {
+                    previousButton.gameObject.SetActive(true);
+                    nextButton.gameObject.SetActive(true);
+                }
+            }
+        }
+        else
+            Debug.LogErrorFormat("Invalid screen number '{0}'. Must be between 0 and {1}", screenNumber, screens.Count - 1);
+    }
 
     /// <summary>
     /// Goes to the next screen
     /// </summary>
 	public void GoToNextScreen()
-	{
-		if (IsWithinScreenCount(CurrentScreen + 1))
-			GoToScreen(CurrentScreen + 1);
-	}
+    {
+        if (IsWithinScreenCount(CurrentScreen + 1))
+            GoToScreen(CurrentScreen + 1);
+    }
 
     /// <summary>
     /// Goes to the previous screen
     /// </summary>
 	public void GoToPreviousScreen()
-	{
-		if (IsWithinScreenCount(CurrentScreen - 1))
-			GoToScreen(CurrentScreen - 1);
-	}
+    {
+        if (IsWithinScreenCount(CurrentScreen - 1))
+            GoToScreen(CurrentScreen - 1);
+    }
 
     /// <summary>
     /// Is the index within the screen count
@@ -515,93 +515,93 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// <param name="index">Index to check if within the screen count</param>
     /// <returns>True if within the screen count</returns>
 	private bool IsWithinScreenCount(int index)
-	{
-		return index >= 0 && index < screens.Count;
-	}
-	#endregion
+    {
+        return index >= 0 && index < screens.Count;
+    }
+    #endregion
 
-	#region Swipe and Drag Controlls
-	public void OnBeginDrag(PointerEventData eventData)
-	{
-		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
-			return;
+    #region Swipe and Drag Controlls
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
+            return;
 
-		if (onScreenDragBegin != null)
-			onScreenDragBegin.Invoke();
+        if (onScreenDragBegin != null)
+            onScreenDragBegin.Invoke();
 
-		// cancel the page tween
-		if (tweenPageCoroutine != null)
+        // cancel the page tween
+        if (tweenPageCoroutine != null)
             StopCoroutine(tweenPageCoroutine);
 
-		// get start data
-		dragStartPos = eventData.position;
-		startTime = Time.time;
+        // get start data
+        dragStartPos = eventData.position;
+        startTime = Time.time;
 
-		pointerStartLocalCursor = Vector2.zero;
-		RectTransformUtility.ScreenPointToLocalPointInRectangle(content, eventData.position, eventData.pressEventCamera, out pointerStartLocalCursor);
-	}
+        pointerStartLocalCursor = Vector2.zero;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(content, eventData.position, eventData.pressEventCamera, out pointerStartLocalCursor);
+    }
 
-	public void OnDrag(PointerEventData eventData)
-	{
-		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
-			return;
-        
-		DragContent(eventData);
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
+            return;
 
-		// validate swipe boolean
-		isSwipe = SwipeValidator(eventData.position);
-	}
+        DragContent(eventData);
 
-	public void OnEndDrag(PointerEventData eventData)
-	{
-		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
-			return;
+        // validate swipe boolean
+        isSwipe = SwipeValidator(eventData.position);
+    }
 
-		// validate screen change and sets current screen 
-		ScreenChangeValidate();
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
+            return;
 
-		// got to screen
-		GoToScreen(currentScreen);
+        // validate screen change and sets current screen 
+        ScreenChangeValidate();
 
-		isSwipe = false;
-	}
+        // got to screen
+        GoToScreen(currentScreen);
 
-	/// <summary>
-	/// Validates whether or not a swipe was make.
-	/// Reasons for failure is swipe timer expired, or threshold is not met
-	/// </summary>
-	/// <param name="currentPosition">Cursor position</param>
-	/// <returns>True if valid swipe</returns>
-	private bool SwipeValidator(Vector2 currentPosition)
-	{
-		// get velocity
-		velocity = currentPosition - dragStartPos;
+        isSwipe = false;
+    }
 
-		// is within time
-		bool isWithinTime = Time.time - startTime < swipeTime;
+    /// <summary>
+    /// Validates whether or not a swipe was make.
+    /// Reasons for failure is swipe timer expired, or threshold is not met
+    /// </summary>
+    /// <param name="currentPosition">Cursor position</param>
+    /// <returns>True if valid swipe</returns>
+    private bool SwipeValidator(Vector2 currentPosition)
+    {
+        // get velocity
+        velocity = currentPosition - dragStartPos;
 
-		// set to true if it is the swipe type we wanted
-		bool isSwipeTypeAndEnoughVelocity;
+        // is within time
+        bool isWithinTime = Time.time - startTime < swipeTime;
 
-		// get absolute values of both velocity axis
-		var velX = Mathf.Abs(velocity.x);
-		var velY = Mathf.Abs(velocity.y);
+        // set to true if it is the swipe type we wanted
+        bool isSwipeTypeAndEnoughVelocity;
 
-		if (swipeType == SwipeType.Horizontal)
-			isSwipeTypeAndEnoughVelocity = velX > velY && velX > swipeVelocityThreshold;
-		else
-			isSwipeTypeAndEnoughVelocity = velY > velX && velY > swipeVelocityThreshold;
+        // get absolute values of both velocity axis
+        var velX = Mathf.Abs(velocity.x);
+        var velY = Mathf.Abs(velocity.y);
 
-		// return true if both are true
-		return isWithinTime && isSwipeTypeAndEnoughVelocity;
-	}
+        if (swipeType == SwipeType.Horizontal)
+            isSwipeTypeAndEnoughVelocity = velX > velY && velX > swipeVelocityThreshold;
+        else
+            isSwipeTypeAndEnoughVelocity = velY > velX && velY > swipeVelocityThreshold;
 
-	/// <summary>
-	/// Validates whether or not a screen can be changed.
-	/// Reasons for failure is we're at the end of the screens list
-	/// </summary>
-	private void ScreenChangeValidate()
-	{
+        // return true if both are true
+        return isWithinTime && isSwipeTypeAndEnoughVelocity;
+    }
+
+    /// <summary>
+    /// Validates whether or not a screen can be changed.
+    /// Reasons for failure is we're at the end of the screens list
+    /// </summary>
+    private void ScreenChangeValidate()
+    {
         if (!isSwipe) return;
 
         int newPageNo;
@@ -635,136 +635,136 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         }
     }
 
-	/// <summary>
-	/// Tweens the contents position
-	/// </summary>
-	/// <param name="toPos">Vector to tween to</param>
-	private IEnumerator TweenPage(Vector2 toPos)
-	{
-		Vector2 from = content.anchoredPosition;
-		Vector2 pos = new Vector2();
-		float t = 0;
+    /// <summary>
+    /// Tweens the contents position
+    /// </summary>
+    /// <param name="toPos">Vector to tween to</param>
+    private IEnumerator TweenPage(Vector2 toPos)
+    {
+        Vector2 from = content.anchoredPosition;
+        Vector2 pos = new Vector2();
+        float t = 0;
 
-		while (pos != toPos || t < 1)
-		{
-			pos = Vector2.Lerp(from, toPos, ease.Evaluate(t));
-			t += Time.deltaTime / tweenTime;
-			SetContentAnchoredPosition(pos);
-			yield return null;
-		}
+        while (pos != toPos || t < 1)
+        {
+            pos = Vector2.Lerp(from, toPos, ease.Evaluate(t));
+            t += Time.deltaTime / tweenTime;
+            SetContentAnchoredPosition(pos);
+            yield return null;
+        }
 
-		if (onScreenTweenEnd != null)
-			onScreenTweenEnd.Invoke(currentScreen);
-	}
-	#endregion
+        if (onScreenTweenEnd != null)
+            onScreenTweenEnd.Invoke(currentScreen);
+    }
+    #endregion
 
-	#region Functions From Unity ScrollRect
+    #region Functions From Unity ScrollRect
 
-	/* Note:
+    /* Note:
      * Everything in this region I sourced from Unity's ScrollRect script and rejigged to work in this script
      * Sources from: https://bitbucket.org/Unity-Technologies/ui 
      * Folder path: UI/UnityEngine.UI/UI/Core/ScrollRect.cs
      */
 
-	/// <summary>
-	/// Wrapper function <see cref="ScrollRect.OnDrag(PointerEventData)"/>
-	/// </summary>
-	/// <param name="eventData"></param>
-	private void DragContent(PointerEventData eventData)
-	{
-		Vector2 localCursor;
-		if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(content, eventData.position, eventData.pressEventCamera, out localCursor))
-			return;
+    /// <summary>
+    /// Wrapper function <see cref="ScrollRect.OnDrag(PointerEventData)"/>
+    /// </summary>
+    /// <param name="eventData"></param>
+    private void DragContent(PointerEventData eventData)
+    {
+        Vector2 localCursor;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(content, eventData.position, eventData.pressEventCamera, out localCursor))
+            return;
 
-		UpdateContentBounds();
+        UpdateContentBounds();
 
-		var pointerDelta = localCursor - pointerStartLocalCursor;
-		Vector2 position = content.anchoredPosition + pointerDelta;
+        var pointerDelta = localCursor - pointerStartLocalCursor;
+        Vector2 position = content.anchoredPosition + pointerDelta;
 
-		// Offset to get content into place in the view.
-		Vector2 offset = CalculateOffset(pointerDelta);
-		position += offset;
+        // Offset to get content into place in the view.
+        Vector2 offset = CalculateOffset(pointerDelta);
+        position += offset;
 
-		if (offset.x != 0)
-			position.x = position.x - RubberDelta(offset.x, viewBounds.size.x);
-		if (offset.y != 0)
-			position.y = position.y - RubberDelta(offset.y, viewBounds.size.y);
+        if (offset.x != 0)
+            position.x = position.x - RubberDelta(offset.x, viewBounds.size.x);
+        if (offset.y != 0)
+            position.y = position.y - RubberDelta(offset.y, viewBounds.size.y);
 
 
-		SetContentAnchoredPosition(position);
-	}
+        SetContentAnchoredPosition(position);
+    }
 
     /// <summary>
     /// Sets the contents anchored position
     /// </summary>
     /// <param name="position">Position to set the content to</param>
 	private void SetContentAnchoredPosition(Vector2 position)
-	{
-		if (swipeType == SwipeType.Vertical)
-			position.x = content.anchoredPosition.x;
+    {
+        if (swipeType == SwipeType.Vertical)
+            position.x = content.anchoredPosition.x;
 
-		if (swipeType == SwipeType.Horizontal)
-			position.y = content.anchoredPosition.y;
+        if (swipeType == SwipeType.Horizontal)
+            position.y = content.anchoredPosition.y;
 
-		if (position != content.anchoredPosition)
-		{
-			content.anchoredPosition = position;
-			UpdateContentBounds();
-		}
-	}
+        if (position != content.anchoredPosition)
+        {
+            content.anchoredPosition = position;
+            UpdateContentBounds();
+        }
+    }
 
     /// <summary>
     /// Updates the bounds of the scroll view content
     /// </summary>
 	private void UpdateContentBounds()
-	{
-		viewBounds = new Bounds(rectTransform.rect.center, rectTransform.rect.size);
-		contentBounds = GetContentBounds();
+    {
+        viewBounds = new Bounds(rectTransform.rect.center, rectTransform.rect.size);
+        contentBounds = GetContentBounds();
 
-		// Make sure content bounds are at least as large as view by adding padding if not.
-		// One might think at first that if the content is smaller than the view, scrolling should be allowed.
-		// However, that's not how scroll views normally work.
-		// Scrolling is *only* possible when content is *larger* than view.
-		// We use the pivot of the content rect to decide in which directions the content bounds should be expanded.
-		// E.g. if pivot is at top, bounds are expanded downwards.
-		// This also works nicely when ContentSizeFitter is used on the content.
-		Vector3 contentSize = contentBounds.size;
-		Vector3 contentPos = contentBounds.center;
-		Vector3 excess = viewBounds.size - contentSize;
-		if (excess.x > 0)
-		{
-			contentPos.x -= excess.x * (content.pivot.x - 0.5f);
-			contentSize.x = viewBounds.size.x;
-		}
+        // Make sure content bounds are at least as large as view by adding padding if not.
+        // One might think at first that if the content is smaller than the view, scrolling should be allowed.
+        // However, that's not how scroll views normally work.
+        // Scrolling is *only* possible when content is *larger* than view.
+        // We use the pivot of the content rect to decide in which directions the content bounds should be expanded.
+        // E.g. if pivot is at top, bounds are expanded downwards.
+        // This also works nicely when ContentSizeFitter is used on the content.
+        Vector3 contentSize = contentBounds.size;
+        Vector3 contentPos = contentBounds.center;
+        Vector3 excess = viewBounds.size - contentSize;
+        if (excess.x > 0)
+        {
+            contentPos.x -= excess.x * (content.pivot.x - 0.5f);
+            contentSize.x = viewBounds.size.x;
+        }
 
-		contentBounds.size = contentSize;
-		contentBounds.center = contentPos;
-	}
+        contentBounds.size = contentSize;
+        contentBounds.center = contentPos;
+    }
 
     /// <summary>
     /// Gets the bounds of the scroll view content
     /// </summary>
     /// <returns>Content Bounds</returns>
 	private Bounds GetContentBounds()
-	{
-		var vMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-		var vMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+    {
+        var vMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        var vMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-		var toLocal = rectTransform.worldToLocalMatrix;
+        var toLocal = rectTransform.worldToLocalMatrix;
 
-		Vector3[] m_Corners = new Vector3[4];
-		content.GetWorldCorners(m_Corners);
-		for (int j = 0; j < 4; j++)
-		{
-			Vector3 v = toLocal.MultiplyPoint3x4(m_Corners[j]);
-			vMin = Vector3.Min(v, vMin);
-			vMax = Vector3.Max(v, vMax);
-		}
+        Vector3[] m_Corners = new Vector3[4];
+        content.GetWorldCorners(m_Corners);
+        for (int j = 0; j < 4; j++)
+        {
+            Vector3 v = toLocal.MultiplyPoint3x4(m_Corners[j]);
+            vMin = Vector3.Min(v, vMin);
+            vMax = Vector3.Max(v, vMax);
+        }
 
-		var bounds = new Bounds(vMin, Vector3.zero);
-		bounds.Encapsulate(vMax);
-		return bounds;
-	}
+        var bounds = new Bounds(vMin, Vector3.zero);
+        bounds.Encapsulate(vMax);
+        return bounds;
+    }
 
     /// <summary>
     /// Offset to get content into place in the view.
@@ -772,21 +772,21 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// <param name="pointerDelta">Pointer delta</param>
     /// <returns>Offset to get content into place in the view.</returns>
 	private Vector2 CalculateOffset(Vector2 pointerDelta)
-	{
-		Vector2 offset = Vector2.zero;
+    {
+        Vector2 offset = Vector2.zero;
 
-		Vector2 min = contentBounds.min;
-		Vector2 max = contentBounds.max;
+        Vector2 min = contentBounds.min;
+        Vector2 max = contentBounds.max;
 
-		min.x += pointerDelta.x;
-		max.x += pointerDelta.x;
-		if (min.x > viewBounds.min.x)
-			offset.x = viewBounds.min.x - min.x;
-		else if (max.x < viewBounds.max.x)
-			offset.x = viewBounds.max.x - max.x;
-        
-		return offset;
-	}
+        min.x += pointerDelta.x;
+        max.x += pointerDelta.x;
+        if (min.x > viewBounds.min.x)
+            offset.x = viewBounds.min.x - min.x;
+        else if (max.x < viewBounds.max.x)
+            offset.x = viewBounds.max.x - max.x;
+
+        return offset;
+    }
 
     /// <summary>
     /// 
@@ -795,31 +795,31 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// <param name="viewSize"></param>
     /// <returns></returns>
 	private float RubberDelta(float overStretching, float viewSize)
-	{
-		return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
-	}
-	#endregion
+    {
+        return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
+    }
+    #endregion
 
-	#region Editing
-	[Header("Editing")]
-	[SerializeField, Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
-	private int editingScreen = 0;
+    #region Editing
+    [Header("Editing")]
+    [SerializeField, Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
+    private int editingScreen = 0;
 
     /// <summary>
     /// Changes the screen being edited
     /// <para><see cref="editingScreen"/> needs to be set before this is called</para>
     /// </summary>
 	public void EditingScreen()
-	{
-		SetScreenPositionsAndContentWidth();
+    {
+        SetScreenPositionsAndContentWidth();
 
-		if (editingScreen >= 0 && editingScreen < screens.Count)
-		{
-			content.anchoredPosition = -screens[editingScreen].anchoredPosition;
-			Debug.LogFormat("Editing: GoToScreen {0}", editingScreen);
-		}
-		else
-			Debug.LogErrorFormat("Invalid editingScreen value. '{0}'", editingScreen);
-	}
-	#endregion
+        if (editingScreen >= 0 && editingScreen < screens.Count)
+        {
+            content.anchoredPosition = -screens[editingScreen].anchoredPosition;
+            Debug.LogFormat("Editing: GoToScreen {0}", editingScreen);
+        }
+        else
+            Debug.LogErrorFormat("Invalid editingScreen value. '{0}'", editingScreen);
+    }
+    #endregion
 }
