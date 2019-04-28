@@ -25,8 +25,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 	[SerializeField, Tooltip("Time a swipe must happen within (s)")]
 	private float swipeTime = 0.5f;
-	private float startTime;
-	private bool isSwipe;
+	private float startTime = 0f;
+	private bool isSwipe = false;
     
 	private Vector2 velocity;
 
@@ -37,7 +37,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[SerializeField, Tooltip("Will contents be masked?")]
 	private bool maskContent = true;
 
-	private Mask _mask;
+	private Mask _mask = null;
 	private Mask Mask
 	{
 		get
@@ -48,30 +48,30 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		}
 	}
 
-	private Image _maskImage;
+	private Image _maskImage = null;
 	private Image MaskImage
 	{
 		get
 		{
 			if (_maskImage == null)
-				_maskImage = GetComponent<Image>(); ;
+				_maskImage = GetComponent<Image>();
 			return _maskImage;
 		}
 	}
 
 	[SerializeField, Tooltip("Starting screen. Note: a 0 indexed array")]
-	private int startingScreen;
+	private int startingScreen = 0;
 
 	[SerializeField]
-	private int currentScreen;
+	private int currentScreen = 0;
 	public int CurrentScreen { get { return currentScreen; } }
 
 	[SerializeField, Tooltip("Parent object which contain the screens")]
-	private RectTransform content;
+	private RectTransform content = null;
 	public RectTransform Content { get { return content; } set { content = value; } }
 
 	[SerializeField, Tooltip("Distance between screens")]
-	private float spacing = 20;
+	private float spacing = 20f;
 	public float Spacing
 	{
 		get { return spacing; }
@@ -83,36 +83,36 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	}
 
 	[SerializeField]
-	private List<RectTransform> screens;
+	private List<RectTransform> screens = null;
 	public int ScreenCount { get { return screens.Count; } }
 
 	// screen orientation change events
-	[Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
-	public bool pollForScreenOrientationChange;
+    [Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
+    public bool pollForScreenOrientationChange = false;
 
 	[SerializeField, Tooltip("A key for testing orientation change event in the editor")]
 	private KeyCode editorRefreshKey = KeyCode.F1;
 	private ScreenOrientation screenOrientation;
 
     [SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
-	private ToggleGroup pagination;
-	private Toggle _toggleMockPrefab;
-	private List<Toggle> toggles;
+	private ToggleGroup pagination = null;
+	private Toggle _toggleMockPrefab = null;
+	private List<Toggle> toggles = null;
 
 	[Header("Controls (Optional)")]
 	[Tooltip("True = Acts like a normal screenRect but with snapping\nFalse = Can only change screens with buttons or from another script")]
 	public bool isInteractable = true;
 
 	[SerializeField]
-	private Button nextButton;
+	private Button nextButton = null;
 	public Button NextButton { get { return nextButton; } }
 
 	[SerializeField]
-	private Button previousButton;
+	private Button previousButton = null;
 	public Button PreviousButton { get { return previousButton; } }
 
 	[SerializeField, Tooltip("Previous button disables when current screen is at 0. Next button disables when current screen is at screen count")]
-	private bool disableButtonsAtEnds;
+	private bool disableButtonsAtEnds = false;
 
 	[Header("Tween")]
 	[SerializeField, Tooltip("Length of the tween (s)")]
@@ -134,11 +134,11 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	public class ScreenEvent : UnityEvent<int> { }
 
 	[Space]
-	public UnityEvent onScreenDragBegin;
-	public ScreenEvent onScreenChanged;
-	public ScreenEvent onScreenTweenEnd;
+	public UnityEvent onScreenDragBegin = null;
+	public ScreenEvent onScreenChanged = null;
+	public ScreenEvent onScreenTweenEnd = null;
 
-    private Coroutine tweenPageCoroutine;
+    private Coroutine tweenPageCoroutine = null;
 
 	private void Start()
 	{
@@ -600,7 +600,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	{
         if (!isSwipe) return;
 
-        int newPageNo = -1;
+        int newPageNo;
 
         if (swipeType == SwipeType.Horizontal)
         {
@@ -799,7 +799,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	#region Editing
 	[Header("Editing")]
 	[SerializeField, Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
-	private int editingScreen;
+	private int editingScreen = 0;
 
     /// <summary>
     /// Changes the screen being edited
