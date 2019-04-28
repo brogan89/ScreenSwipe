@@ -152,6 +152,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			nextButton.onClick.AddListener(GoToNextScreen);
 	}
 
+    /// <summary>
+    /// Checks for orientation changes
+    /// </summary>
+    /// <returns>coroutine</returns>
 	private IEnumerator CheckForOrientationChange()
 	{
 		// set initial orientation
@@ -218,7 +222,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         }
     }
 
-	private void SelectToggle(int index)
+    /// <summary>
+    /// Turns a toggle on
+    /// </summary>
+	private void SelectToggle()
     {
         if (!pagination) return;
 
@@ -229,10 +236,12 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         catch (ArgumentOutOfRangeException e)
         {
             Debug.LogError(e);
-            Debug.LogError(index);
         }
     }
 
+    /// <summary>
+    /// Adds a pagination toggle
+    /// </summary>
 	private void AddPaginationToggle()
 	{
         if (!pagination) return;
@@ -249,6 +258,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         toggles.Add(newToggle);
     }
 
+    /// <summary>
+    /// Removes a pagination toggle
+    /// </summary>
+    /// <param name="index">Index to remove toggle</param>
 	private void RemovePaginationToggle(int index)
 	{
         if (!pagination) return;
@@ -260,6 +273,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         Destroy(toggles[index].gameObject);
     }
 
+    /// <summary>
+    /// Removes all pagination toggles
+    /// </summary>
 	private void RemoveAllPaginationToggles()
 	{
         if (!pagination) return;
@@ -277,7 +293,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <summary>
 	/// Callback function from pagination toggles to change screen upon clicking toggle
 	/// </summary>
-	/// <param name="isOn"></param>
+	/// <param name="isOn">Is the toggle on</param>
 	private void PaginationToggleCallback(bool isOn)
     {
         if (!isOn) return;
@@ -353,7 +369,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <summary>
 	/// Waits until end of frame and then resets screens and pagination
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>Coroutine</returns>
 	private IEnumerator RefreshContentsCoroutine()
 	{
 		yield return new WaitForEndOfFrame();
@@ -364,7 +380,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <summary>
 	/// Adds a screen to the list then recalculates the contents width
 	/// </summary>
-	/// <param name="newScreen"></param>
+	/// <param name="newScreen">Screen to add</param>
 	/// <param name="screenNumber">Default as last screen. index 0 - </param>
 	public void AddScreen(RectTransform newScreen, int screenNumber = -1)
 	{
@@ -388,7 +404,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// <summary>
     /// Removes screen from list and recalculates contents width 
     /// </summary>
-    /// <param name="screenNumber"></param>
+    /// <param name="screenNumber">Screen number to remove</param>
     public void RemoveScreen(int screenNumber)
 	{
 		if (IsWithinScreenCount(screenNumber))
@@ -409,6 +425,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			Debug.LogWarningFormat("ScreenNumber: '{0}' doesn't exist", screenNumber);
 	}
 
+    /// <summary>
+    /// Removes all screens
+    /// </summary>
 	public void RemoveAllScreens()
 	{
 		Debug.Log("Removing Screens : " + content.childCount);
@@ -428,7 +447,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <summary>
 	/// Tweens to a specific screen
 	/// </summary>
-	/// <param name="screenNumber"></param>
+	/// <param name="screenNumber">Screen number to tween to</param>
 	public void GoToScreen(int screenNumber)
 	{
 		if (IsWithinScreenCount(screenNumber))
@@ -437,10 +456,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			currentScreen = screenNumber;
 
 			// pagination
-			SelectToggle(screenNumber);
+			SelectToggle();
 
 			// tween screen
-			// StopCoroutine("TweenPage");
 			StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
 
 			// disable buttons if ends are reached
@@ -467,18 +485,29 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			Debug.LogErrorFormat("Invalid screen number '{0}'. Must be between 0 and {1}", screenNumber, screens.Count - 1);
 	}
 
+    /// <summary>
+    /// Goes to the next screen
+    /// </summary>
 	public void GoToNextScreen()
 	{
 		if (IsWithinScreenCount(CurrentScreen + 1))
 			GoToScreen(CurrentScreen + 1);
 	}
 
+    /// <summary>
+    /// Goes to the previous screen
+    /// </summary>
 	public void GoToPreviousScreen()
 	{
 		if (IsWithinScreenCount(CurrentScreen - 1))
 			GoToScreen(CurrentScreen - 1);
 	}
 
+    /// <summary>
+    /// Is the index within the screen count
+    /// </summary>
+    /// <param name="index">Index to check if within the screen count</param>
+    /// <returns>True if within the screen count</returns>
 	private bool IsWithinScreenCount(int index)
 	{
 		return index >= 0 && index < screens.Count;
@@ -495,7 +524,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			onScreenDragBegin.Invoke();
 
 		// cancel tweening
-		StopCoroutine("TweenPage");
+		StopCoroutine("TweenPage"); //TODO: should have coroutine cached, this is expensive
 
 		// get start data
 		dragStartPos = eventData.position;
@@ -534,8 +563,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// Validates whether or not a swipe was make.
 	/// Reasons for failure is swipe timer expired, or threshold is not met
 	/// </summary>
-	/// <param name="currentPosition"></param>
-	/// <returns></returns>
+	/// <param name="currentPosition">Cursor position</param>
+	/// <returns>True if valid swipe</returns>
 	private bool SwipeValidator(Vector2 currentPosition)
 	{
 		// get velocity
@@ -602,7 +631,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// <summary>
 	/// Tweens the contents position
 	/// </summary>
-	/// <param name="toPos"></param>
+	/// <param name="toPos">Vector to tween to</param>
 	private IEnumerator TweenPage(Vector2 toPos)
 	{
 		Vector2 from = content.anchoredPosition;
@@ -630,7 +659,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
      * Folder path: UI/UnityEngine.UI/UI/Core/ScrollRect.cs
      */
 
-
 	/// <summary>
 	/// Wrapper function <see cref="ScrollRect.OnDrag(PointerEventData)"/>
 	/// </summary>
@@ -641,13 +669,13 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(content, eventData.position, eventData.pressEventCamera, out localCursor))
 			return;
 
-		UpdateBounds();
+		UpdateContentBounds();
 
 		var pointerDelta = localCursor - pointerStartLocalCursor;
 		Vector2 position = content.anchoredPosition + pointerDelta;
 
 		// Offset to get content into place in the view.
-		Vector2 offset = CalculateOffset(position - content.anchoredPosition);
+		Vector2 offset = CalculateOffset(pointerDelta);
 		position += offset;
 
 		if (offset.x != 0)
@@ -659,6 +687,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		SetContentAnchoredPosition(position);
 	}
 
+    /// <summary>
+    /// Sets the contents anchored position
+    /// </summary>
+    /// <param name="position">Position to set the content to</param>
 	private void SetContentAnchoredPosition(Vector2 position)
 	{
 		if (swipeType == SwipeType.Vertical)
@@ -670,14 +702,17 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (position != content.anchoredPosition)
 		{
 			content.anchoredPosition = position;
-			UpdateBounds();
+			UpdateContentBounds();
 		}
 	}
 
-	private void UpdateBounds()
+    /// <summary>
+    /// Updates the bounds of the scroll view content
+    /// </summary>
+	private void UpdateContentBounds()
 	{
 		viewBounds = new Bounds(rectTransform.rect.center, rectTransform.rect.size);
-		contentBounds = GetBounds();
+		contentBounds = GetContentBounds();
 
 		// Make sure content bounds are at least as large as view by adding padding if not.
 		// One might think at first that if the content is smaller than the view, scrolling should be allowed.
@@ -699,7 +734,11 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		contentBounds.center = contentPos;
 	}
 
-	private Bounds GetBounds()
+    /// <summary>
+    /// Gets the bounds of the scroll view content
+    /// </summary>
+    /// <returns>Content Bounds</returns>
+	private Bounds GetContentBounds()
 	{
 		var vMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
 		var vMax = new Vector3(float.MinValue, float.MinValue, float.MinValue);
@@ -720,24 +759,34 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		return bounds;
 	}
 
-	private Vector2 CalculateOffset(Vector2 delta)
+    /// <summary>
+    /// Offset to get content into place in the view.
+    /// </summary>
+    /// <param name="pointerDelta">Pointer delta</param>
+    /// <returns>Offset to get content into place in the view.</returns>
+	private Vector2 CalculateOffset(Vector2 pointerDelta)
 	{
 		Vector2 offset = Vector2.zero;
 
 		Vector2 min = contentBounds.min;
 		Vector2 max = contentBounds.max;
 
-		min.x += delta.x;
-		max.x += delta.x;
+		min.x += pointerDelta.x;
+		max.x += pointerDelta.x;
 		if (min.x > viewBounds.min.x)
 			offset.x = viewBounds.min.x - min.x;
 		else if (max.x < viewBounds.max.x)
 			offset.x = viewBounds.max.x - max.x;
-
-
+        
 		return offset;
 	}
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="overStretching"></param>
+    /// <param name="viewSize"></param>
+    /// <returns></returns>
 	private float RubberDelta(float overStretching, float viewSize)
 	{
 		return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
@@ -748,6 +797,11 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[Header("Editing")]
 	[SerializeField, Tooltip("Screen you want to be showing in Game view. Note: 0 indexed array")]
 	private int editingScreen;
+
+    /// <summary>
+    /// Changes the screen being edited
+    /// <para><see cref="editingScreen"/> needs to be set before this is called</para>
+    /// </summary>
 	public void EditingScreen()
 	{
 		SetScreenPositionsAndContentWidth();
