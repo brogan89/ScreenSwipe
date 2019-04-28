@@ -138,6 +138,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	public ScreenEvent onScreenChanged;
 	public ScreenEvent onScreenTweenEnd;
 
+    private Coroutine tweenPageCoroutine;
+
 	private void Start()
 	{
 		SetScreenPositionsAndContentWidth();
@@ -459,7 +461,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			SelectToggle();
 
 			// tween screen
-			StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
+			tweenPageCoroutine = StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
 
 			// disable buttons if ends are reached
 			if (disableButtonsAtEnds && previousButton != null && nextButton != null)
@@ -524,7 +526,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			onScreenDragBegin.Invoke();
 
 		// cancel tweening
-		StopCoroutine("TweenPage"); //TODO: should have coroutine cached, this is expensive
+		if (tweenPageCoroutine != null)
+            StopCoroutine(tweenPageCoroutine);
 
 		// get start data
 		dragStartPos = eventData.position;
