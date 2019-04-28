@@ -157,11 +157,15 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
     /// <summary>
     /// Checks for orientation changes
     /// </summary>
-    /// <returns>coroutine</returns>
+    /// <returns>Coroutine</returns>
 	private IEnumerator CheckForOrientationChange()
 	{
 		// set initial orientation
 		screenOrientation = Screen.orientation;
+
+        // Create and cache delay, stops garbage being generated every frame
+        // This coroutine doesn't need to be run as fast as possible, once per frame is fast enough
+        var waitForEndOfFrame = new WaitForEndOfFrame();
 
 		while (enabled)
 		{
@@ -174,7 +178,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 				// refresh contents on the change
 				RefreshContents();
 			}
-			yield return null;
+			yield return waitForEndOfFrame;
 		}
 	}
 
@@ -212,7 +216,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
         toggles = pagination.GetComponentsInChildren<Toggle>().ToList();
 
         // store the first toggle to use for instantiating later
-        if (toggles[0] != null && _toggleMockPrefab == null)
+        if (toggles[0] && !_toggleMockPrefab)
             _toggleMockPrefab = toggles[0];
 
         // loop through and assign toggle properties
@@ -525,7 +529,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (onScreenDragBegin != null)
 			onScreenDragBegin.Invoke();
 
-		// cancel tweening
+		// cancel the page tween
 		if (tweenPageCoroutine != null)
             StopCoroutine(tweenPageCoroutine);
 
