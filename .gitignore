@@ -5,6 +5,7 @@
 /[Oo]bj/
 /.vs/
 /UnityPackageManager/
+/Logs/
 
 *.csproj
 *.unityproj
