@@ -139,7 +139,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	[Space]
 	public UnityEvent onScreenDragBegin = null;
 	public ScreenEvent onScreenChanged = null;
-	public ScreenEvent onScreenTweenEnd = null;
 
 	private Coroutine tweenPageCoroutine = null;
 
@@ -469,7 +468,13 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 			// tween screen
 			if (gameObject.activeInHierarchy)
+			{
+				// if tween is already in motion stop it and start new one
+				if (tweenPageCoroutine != null)
+					StopCoroutine(tweenPageCoroutine);
+
 				tweenPageCoroutine = StartCoroutine(TweenPage(-screens[currentScreen].anchoredPosition));
+			}
 
 			// disable buttons if ends are reached
 			if (disableButtonsAtEnds && previousButton != null && nextButton != null)
@@ -655,7 +660,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			yield return null;
 		}
 
-		onScreenTweenEnd?.Invoke(currentScreen);
+		tweenPageCoroutine = null;
 	}
 	#endregion
 

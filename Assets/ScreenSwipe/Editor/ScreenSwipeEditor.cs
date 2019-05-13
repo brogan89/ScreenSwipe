@@ -38,7 +38,6 @@ public class ScreenSwipeEditor : Editor
 	// events
 	SerializedProperty _onScreenDrag;
 	SerializedProperty _onScreenChanged;
-	SerializedProperty _onScreenTweenEnd;
 
 	private void OnEnable()
 	{
@@ -76,7 +75,6 @@ public class ScreenSwipeEditor : Editor
 		// events
 		_onScreenDrag = serializedObject.FindProperty("onScreenDragBegin");
 		_onScreenChanged = serializedObject.FindProperty("onScreenChanged");
-		_onScreenTweenEnd = serializedObject.FindProperty("onScreenTweenEnd");
 	}
 
 	public override void OnInspectorGUI()
@@ -120,11 +118,9 @@ public class ScreenSwipeEditor : Editor
 		EditorGUILayout.PropertyField(_tweenTime);
 		EditorGUILayout.PropertyField(_ease);
 
-
 		//events
 		EditorGUILayout.PropertyField(_onScreenDrag);
 		EditorGUILayout.PropertyField(_onScreenChanged);
-		EditorGUILayout.PropertyField(_onScreenTweenEnd);
 
 		serializedObject.ApplyModifiedProperties();
 	}
