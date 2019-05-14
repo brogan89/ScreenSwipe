@@ -312,6 +312,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			if (toggles[i].isOn)
 			{
 				GoToScreen(i);
+                if (onScreenChanged != null) onScreenChanged.Invoke(i);
 				break;
 			}
 		}
