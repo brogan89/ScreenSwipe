@@ -21,9 +21,6 @@ public class ScreenSwipeEditor : Editor
 	private SerializedProperty _startingScreen;
 	private SerializedProperty _screens;
 
-	// screen change events
-	private SerializedProperty _pollForScreenOrientationChange;
-
 	// controlls
 	private SerializedProperty _isInteractable;
 	private SerializedProperty _nextButton;
@@ -56,9 +53,6 @@ public class ScreenSwipeEditor : Editor
 		_currentScreen = serializedObject.FindProperty("currentScreen");
 		_startingScreen = serializedObject.FindProperty("startingScreen");
 		_screens = serializedObject.FindProperty("screens");
-
-		// screen change
-		_pollForScreenOrientationChange = serializedObject.FindProperty("pollForScreenOrientationChange");
 
 		// controlls
 		_isInteractable = serializedObject.FindProperty("isInteractable");
@@ -99,9 +93,6 @@ public class ScreenSwipeEditor : Editor
 		EditorGUILayout.PropertyField(_currentScreen);
 		EditorGUILayout.PropertyField(_startingScreen);
 		EditorGUILayout.PropertyField(_screens, true);
-
-		//screen
-		EditorGUILayout.PropertyField(_pollForScreenOrientationChange);
 
 		// controlls
 		EditorGUILayout.PropertyField(_isInteractable);

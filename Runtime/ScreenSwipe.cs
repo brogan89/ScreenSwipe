@@ -85,11 +85,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	private List<RectTransform> screens = null;
 	public int ScreenCount => screens.Count;
 
-	// screen orientation change events
-	[Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
-	public bool pollForScreenOrientationChange = false;
-	private ScreenOrientation screenOrientation;
-
 	[SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
 	private ToggleGroup pagination = null;
 	private Toggle _toggleMockPrefab = null;
@@ -149,39 +144,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			nextButton.onClick.AddListener(GoToNextScreen);
 	}
 
-	/// <summary>
-	/// Checks for orientation changes
-	/// </summary>
-	/// <returns>Coroutine</returns>
-	private IEnumerator CheckForOrientationChange()
+	private void OnRectTransformDimensionsChange()
 	{
-		// set initial orientation
-		screenOrientation = Screen.orientation;
-
-		// Create and cache delay, stops garbage being generated every frame
-		// This coroutine doesn't need to be run as fast as possible, once per frame is fast enough
-		var waitForEndOfFrame = new WaitForEndOfFrame();
-
-		while (enabled)
-		{
-			if (screenOrientation != Screen.orientation)
-			{
-				screenOrientation = Screen.orientation;
-
-				Debug.Log($"ScreenSwipe Orientation change: {screenOrientation}");
-
-				// refresh contents on the change
-				RefreshContents();
-			}
-			yield return waitForEndOfFrame;
-		}
-	}
-
-	private void OnEnable()
-	{
-		// refresh contents on screen change
-		if (pollForScreenOrientationChange)
-			StartCoroutine(CheckForOrientationChange());
+		RefreshContents();
 	}
 
 	private void OnValidate()
@@ -365,7 +330,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	/// </summary>
 	public void RefreshContents()
 	{
-		StartCoroutine(RefreshContentsCoroutine());
+		if (gameObject.activeInHierarchy)
+			StartCoroutine(RefreshContentsCoroutine());
 	}
 
 	/// <summary>
