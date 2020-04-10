@@ -12,11 +12,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 {
 	public RectTransform rectTransform => (RectTransform)transform;
 
-	public enum SwipeType
-	{
-		Horizontal,
-		Vertical
-	}
+	public enum SwipeType { Horizontal, Vertical }
 
 	[Header("Swipe")]
 	[SerializeField]
@@ -92,9 +88,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	// screen orientation change events
 	[Tooltip("Will poll for changes in screen orientation changes. (Mobile)")]
 	public bool pollForScreenOrientationChange = false;
-
-	[SerializeField, Tooltip("A key for testing orientation change event in the editor")]
-	private KeyCode editorRefreshKey = KeyCode.F1;
 	private ScreenOrientation screenOrientation;
 
 	[SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
@@ -171,7 +164,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 		while (enabled)
 		{
-			if (screenOrientation != Screen.orientation || (Application.isEditor && Input.GetKeyDown(editorRefreshKey)))
+			if (screenOrientation != Screen.orientation)
 			{
 				screenOrientation = Screen.orientation;
 

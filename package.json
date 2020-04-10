@@ -1,0 +1,18 @@
+{
+    "name": "com.brogan89.screenswipe",
+    "displayName": "Screen Swipe",
+    "version": "1.0.0",
+    "description": "ScrollRect that snaps pages to screen size",
+    "keywords": [
+      "Screen",
+      "Swipe",
+      "Scroll",
+      "Scroller",
+      "ScrollRect"
+    ],
+    "category": "UI",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/brogan89/ScreenSwipe.git"
+    }
+  }

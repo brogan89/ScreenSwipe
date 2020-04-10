@@ -5,39 +5,38 @@ using UnityEngine;
 public class ScreenSwipeEditor : Editor
 {
 	// editing
-	SerializedProperty _editingScreen;
+	private SerializedProperty _editingScreen;
 
 	//swipe
-	SerializedProperty _swipeType;
-	SerializedProperty _swipeTime;
-	SerializedProperty _swipeVelocityThreshold;
+	private SerializedProperty _swipeType;
+	private SerializedProperty _swipeTime;
+	private SerializedProperty _swipeVelocityThreshold;
 
 	// content
-	SerializedProperty _maskContent;
-	SerializedProperty _content;
-	SerializedProperty _spacing;
-	SerializedProperty _pagination;
-	SerializedProperty _currentScreen;
-	SerializedProperty _startingScreen;
-	SerializedProperty _screens;
+	private SerializedProperty _maskContent;
+	private SerializedProperty _content;
+	private SerializedProperty _spacing;
+	private SerializedProperty _pagination;
+	private SerializedProperty _currentScreen;
+	private SerializedProperty _startingScreen;
+	private SerializedProperty _screens;
 
 	// screen change events
-	SerializedProperty _pollForScreenOrientationChange;
-	SerializedProperty _editorRefreshKey;
+	private SerializedProperty _pollForScreenOrientationChange;
 
 	// controlls
-	SerializedProperty _isInteractable;
-	SerializedProperty _nextButton;
-	SerializedProperty _previousButton;
-	SerializedProperty _disableButtonsAtEnds;
+	private SerializedProperty _isInteractable;
+	private SerializedProperty _nextButton;
+	private SerializedProperty _previousButton;
+	private SerializedProperty _disableButtonsAtEnds;
 
 	// tween
-	SerializedProperty _tweenTime;
-	SerializedProperty _ease;
+	private SerializedProperty _tweenTime;
+	private SerializedProperty _ease;
 
 	// events
-	SerializedProperty _onScreenDrag;
-	SerializedProperty _onScreenChanged;
+	private SerializedProperty _onScreenDrag;
+	private SerializedProperty _onScreenChanged;
 
 	private void OnEnable()
 	{
@@ -60,7 +59,6 @@ public class ScreenSwipeEditor : Editor
 
 		// screen change
 		_pollForScreenOrientationChange = serializedObject.FindProperty("pollForScreenOrientationChange");
-		_editorRefreshKey = serializedObject.FindProperty("editorRefreshKey");
 
 		// controlls
 		_isInteractable = serializedObject.FindProperty("isInteractable");
@@ -104,8 +102,6 @@ public class ScreenSwipeEditor : Editor
 
 		//screen
 		EditorGUILayout.PropertyField(_pollForScreenOrientationChange);
-		if (_target.pollForScreenOrientationChange)
-			EditorGUILayout.PropertyField(_editorRefreshKey);
 
 		// controlls
 		EditorGUILayout.PropertyField(_isInteractable);

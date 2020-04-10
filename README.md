@@ -1,5 +1,17 @@
 # ScreenSwipe
 
+ScrollRect that snaps pages to screen size
+
+## Install
+
+- In package manager window `Window > Package Manager` click + icon and choose "Add package from git URL...", then paste in the URL `https://github.com/brogan89/ScreenSwipe.git`
+
+- Alternatively add a dependency to your manifest.json in `./Packages` folder.
+```
+"com.brogan89.screenswipe": "https://github.com/brogan89/ScreenSwipe.git"
+```
+
+## Usage
 - Right click in hierarchy choose UI > Screen Swipe > Screen Swipe. 
 - Then do the same for Pagination. 
 - Drag Pagination gameObject into Pagination field in the Screen Swipe inspector.

@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 /*
  * Logs in console when events are invoked by ScreenSwipe
@@ -19,12 +18,12 @@ public class TestEventListener : MonoBehaviour
 		screenSwipe.onScreenChanged.AddListener(OnScreenChanged);
 	}
 
-	public void OnScreenDragBegin()
+	private static void OnScreenDragBegin()
 	{
 		Debug.Log("OnScreenDragBegin");
 	}
 
-	public void OnScreenChanged(int screenNo)
+	private static void OnScreenChanged(int screenNo)
 	{
 		Debug.Log($"OnScreenChanged: {screenNo}");
 	}
