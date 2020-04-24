@@ -23,6 +23,7 @@ public class ScreenSwipeEditor : Editor
 
 	// controlls
 	private SerializedProperty _isInteractable;
+	private SerializedProperty _clampEndScreens;
 	private SerializedProperty _nextButton;
 	private SerializedProperty _previousButton;
 	private SerializedProperty _disableButtonsAtEnds;
@@ -56,6 +57,7 @@ public class ScreenSwipeEditor : Editor
 
 		// controlls
 		_isInteractable = serializedObject.FindProperty("isInteractable");
+		_clampEndScreens = serializedObject.FindProperty("clampEndScreens");
 		_nextButton = serializedObject.FindProperty("nextButton");
 		_previousButton = serializedObject.FindProperty("previousButton");
 		_disableButtonsAtEnds = serializedObject.FindProperty("disableButtonsAtEnds");
@@ -96,6 +98,7 @@ public class ScreenSwipeEditor : Editor
 
 		// controlls
 		EditorGUILayout.PropertyField(_isInteractable);
+		EditorGUILayout.PropertyField(_clampEndScreens);
 		EditorGUILayout.PropertyField(_nextButton);
 		EditorGUILayout.PropertyField(_previousButton);
 		if (_target.NextButton != null || _target.PreviousButton != null)

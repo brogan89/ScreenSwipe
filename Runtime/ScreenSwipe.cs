@@ -95,6 +95,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	public bool isInteractable = true;
 
 	[SerializeField]
+	[Tooltip("True: can drag passed the end scenes exposing the background\nFalse: can't swipe beyond end screens positions")]
+	private bool clampEndScreens = false;
+
+	[SerializeField]
 	private Button nextButton = null;
 	public Button NextButton => nextButton;
 
@@ -670,6 +674,16 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 
 		if (swipeType == SwipeType.Horizontal)
 			position.y = content.anchoredPosition.y;
+
+		// clamp the end screens as not to expose background
+		if (clampEndScreens)
+		{
+			//Debug.Log($"Clamp: {position.x}, {-screens.Last().anchoredPosition.x}, {0}");
+			if (swipeType == SwipeType.Horizontal)
+				position.x = Mathf.Clamp(position.x, -screens.Last().anchoredPosition.x, 0);
+			else
+				position.y = Mathf.Clamp(position.y, -screens.Last().anchoredPosition.y, 0);
+		}
 
 		if (position != content.anchoredPosition)
 		{
