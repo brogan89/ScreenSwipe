@@ -14,5 +14,12 @@
     "repository": {
       "type": "git",
       "url": "https://github.com/brogan89/ScreenSwipe.git"
-    }
+    },
+    "samples": [
+      {
+        "displayName": "Demo",
+        "description": "Demos horizontal and vertical ScreenSwipe script",
+        "path": "Example~/Demo"
+      }
+    ]
   }
