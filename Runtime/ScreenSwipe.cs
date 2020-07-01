@@ -81,9 +81,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		}
 	}
 
-	[SerializeField]
-	private List<RectTransform> screens = null;
-	public int ScreenCount => screens.Count;
+	public List<RectTransform> screens;
 
 	[SerializeField, Tooltip("Toggle Group to display pagination. (Optional)")]
 	private ToggleGroup pagination = null;
@@ -448,7 +446,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 					previousButton.gameObject.SetActive(false);
 					nextButton.gameObject.SetActive(true);
 				}
-				else if (currentScreen == ScreenCount - 1)
+				else if (currentScreen == screens.Count - 1)
 				{
 					nextButton.gameObject.SetActive(false);
 					previousButton.gameObject.SetActive(true);
@@ -491,6 +489,26 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	{
 		return index >= 0 && index < screens.Count;
 	}
+
+	/// <summary>
+	/// Returns RectTransform screen for given index. Null if out of range.
+	/// </summary>
+	/// <param name="index"></param>
+	/// <returns></returns>
+	public RectTransform GetScreen(int index)
+	{
+		return IsWithinScreenCount(index) ? screens[index] : null;
+	}
+
+	/// <summary>
+	/// Returns the current screen as RectTransform
+	/// </summary>
+	/// <returns></returns>
+	public RectTransform GetCurrentScreen()
+	{
+		return screens[CurrentScreen];
+	}
+	
 	#endregion
 
 	#region Swipe and Drag Controlls
