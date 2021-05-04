@@ -22,6 +22,9 @@ ScrollRect that snaps pages to screen size
 
 See the Demo scene for best implementation.
 
+## Notes
+If you want a SrollRect as child of this script then use [ScrollRectEx](https://bitbucket.org/UnityUIExtensions/unity-ui-extensions/src/release/Runtime/Scripts/Utilities/ScrollRectEx.cs) from Unity UI Extensions. It will pass the PointerData up the heirarchy in the OnDrag events. For some reason Unity's vanilla ScrollRect doesn't allow this.
+
 
 # References
 This script used bits of code from and inspired by:
