@@ -4,6 +4,12 @@ ScrollRect that snaps pages to screen size
 
 ## Install
 
+### OpenUPM
+[![openupm](https://img.shields.io/npm/v/com.brogan89.screenswipe?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.brogan89.screenswipe/)
+
+- Install with [OpenUPM CLI](https://openupm.com/) `openupm add com.brogan89.screenswipe`
+
+### UPM
 - In package manager window `Window > Package Manager` click + icon and choose "Add package from git URL...", then paste in the URL `https://github.com/brogan89/ScreenSwipe.git`
 
 - Alternatively add a dependency to your manifest.json in `./Packages` folder.
