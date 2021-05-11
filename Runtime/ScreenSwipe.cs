@@ -127,7 +127,9 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 	public class ScreenEvent : UnityEvent<int> { }
 
 	[Space]
-	public UnityEvent onScreenDragBegin = null;
+	public UnityEvent<PointerEventData> onScreenDragBegin = null;
+	public UnityEvent<PointerEventData> onScreenDrag = null;
+	public UnityEvent<PointerEventData> onScreenDragEnd = null;
 	public ScreenEvent onScreenChanged = null;
 
 	private Coroutine tweenPageCoroutine = null;
@@ -517,7 +519,7 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
 			return;
 
-		onScreenDragBegin?.Invoke();
+		onScreenDragBegin?.Invoke(eventData);
 
 		// cancel the page tween
 		if (tweenPageCoroutine != null)
@@ -536,6 +538,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
 			return;
 
+		onScreenDrag?.Invoke(eventData);
+		
 		DragContent(eventData);
 
 		// validate swipe boolean
@@ -547,6 +551,8 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		if (eventData.button != PointerEventData.InputButton.Left || !isInteractable)
 			return;
 
+		onScreenDragEnd?.Invoke(eventData);
+		
 		// validate screen change and sets current screen 
 		ScreenChangeValidate();
 

@@ -21,7 +21,7 @@ public class ScreenSwipeEditor : Editor
 	private SerializedProperty _startingScreen;
 	private SerializedProperty _screens;
 
-	// controlls
+	// controls
 	private SerializedProperty _isInteractable;
 	private SerializedProperty _clampEndScreens;
 	private SerializedProperty _nextButton;
@@ -33,7 +33,9 @@ public class ScreenSwipeEditor : Editor
 	private SerializedProperty _ease;
 
 	// events
+	private SerializedProperty _onScreenDragBegin;
 	private SerializedProperty _onScreenDrag;
+	private SerializedProperty _onScreenDragEnd;
 	private SerializedProperty _onScreenChanged;
 
 	private void OnEnable()
@@ -67,7 +69,9 @@ public class ScreenSwipeEditor : Editor
 		_ease = serializedObject.FindProperty("ease");
 
 		// events
-		_onScreenDrag = serializedObject.FindProperty("onScreenDragBegin");
+		_onScreenDragBegin = serializedObject.FindProperty("onScreenDragBegin");
+		_onScreenDrag = serializedObject.FindProperty("onScreenDrag");
+		_onScreenDragEnd = serializedObject.FindProperty("onScreenDragEnd");
 		_onScreenChanged = serializedObject.FindProperty("onScreenChanged");
 	}
 
@@ -96,12 +100,12 @@ public class ScreenSwipeEditor : Editor
 		EditorGUILayout.PropertyField(_startingScreen);
 		EditorGUILayout.PropertyField(_screens, true);
 
-		// controlls
+		// controls
 		EditorGUILayout.PropertyField(_isInteractable);
 		EditorGUILayout.PropertyField(_clampEndScreens);
 		EditorGUILayout.PropertyField(_nextButton);
 		EditorGUILayout.PropertyField(_previousButton);
-		if (_target.NextButton != null || _target.PreviousButton != null)
+		if (_target.NextButton || _target.PreviousButton)
 			EditorGUILayout.PropertyField(_disableButtonsAtEnds);
 
 		// tween
@@ -109,7 +113,9 @@ public class ScreenSwipeEditor : Editor
 		EditorGUILayout.PropertyField(_ease);
 
 		//events
+		EditorGUILayout.PropertyField(_onScreenDragBegin);
 		EditorGUILayout.PropertyField(_onScreenDrag);
+		EditorGUILayout.PropertyField(_onScreenDragEnd);
 		EditorGUILayout.PropertyField(_onScreenChanged);
 
 		serializedObject.ApplyModifiedProperties();
