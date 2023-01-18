@@ -274,7 +274,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 			if (toggles[i].isOn)
 			{
 				GoToScreen(i);
-                if (onScreenChanged != null) onScreenChanged.Invoke(i);
 				break;
 			}
 		}
@@ -459,7 +458,10 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 					nextButton.gameObject.SetActive(true);
 				}
 			}
-		}
+
+            // invoke changed event
+            onScreenChanged?.Invoke(currentScreen);
+        }
 		else
 			Debug.LogErrorFormat($"Invalid screen number '{screenNumber}'. Must be between 0 and {screens.Count - 1}");
 	}
@@ -624,9 +626,6 @@ public class ScreenSwipe : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndD
 		{
 			// change current page
 			currentScreen = newPageNo;
-
-			// invoke changed event
-			onScreenChanged?.Invoke(currentScreen);
 		}
 	}
 
